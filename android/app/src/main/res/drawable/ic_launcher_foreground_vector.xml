@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- دایره پس‌زمینه نرم -->
+    <path
+        android:fillColor="#1E5BB8"
+        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
+
+    <!-- بدن ماهی -->
+    <path
+        android:fillColor="#60A5FA"
+        android:pathData="M28,54 Q42,38 58,42 Q72,46 78,54 Q72,62 58,66 Q42,70 28,54 Z" />
+
+    <!-- دم -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M78,54 L92,42 L88,54 L92,66 Z" />
+
+    <!-- باله بالا -->
+    <path
+        android:fillColor="#93C5FD"
+        android:pathData="M48,42 L54,28 L60,42 Z" />
+
+    <!-- چشم -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,50 m-5,0 a5,5 0,1 1,10 0 a5,5 0,1 1,-10 0" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M38,50 m-2.5,0 a2.5,2.5 0,1 1,5 0 a2.5,2.5 0,1 1,-5 0" />
+
+    <!-- حباب کوچک -->
+    <path
+        android:fillColor="#E0F2FE"
+        android:pathData="M22,40 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+    <path
+        android:fillColor="#E0F2FE"
+        android:pathData="M18,32 m-2,0 a2,2 0,1 1,4 0 a2,2 0,1 1,-4 0" />
+
+</vector>

@@ -1,0 +1,108 @@
+name: 🎣 Build Android APK / AAB
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'نوع بیلد'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+          - bundle
+
+jobs:
+  build:
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: ☕ Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🏗️ Build web app
+        run: npm run build
+
+      - name: 🔄 Capacitor sync
+        run: npx cap sync android
+
+      - name: 🔑 Grant Gradle permissions
+        run: chmod +x android/gradlew
+
+      - name: 📂 Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 🔨 Build Debug APK
+        if: ${{ github.event.inputs.build_type != 'release' && github.event.inputs.build_type != 'bundle' }}
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: 🔨 Build Release APK
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: 📦 Build Release AAB (Google Play)
+        if: ${{ github.event.inputs.build_type == 'bundle' }}
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: 📤 Upload Debug APK
+        if: ${{ github.event.inputs.build_type != 'release' && github.event.inputs.build_type != 'bundle' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: FishMath-Debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: 📤 Upload Release APK
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: FishMath-Release-APK
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: 📤 Upload Release AAB
+        if: ${{ github.event.inputs.build_type == 'bundle' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: FishMath-Release-AAB
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+
+      - name: ℹ️ Build Info
+        run: |
+          echo "✅ Build completed successfully!"
+          find android/app/build/outputs -name "*.apk" -o -name "*.aab" 2>/dev/null | while read f; do ls -lh "$f"; done
