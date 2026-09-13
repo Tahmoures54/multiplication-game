@@ -89,23 +89,21 @@ export function generateQuestion(
       const display = missingA
         ? `؟ × ${b} = ${correct}`
         : `${a} × ؟ = ${correct}`;
-      return {
+      const answer = missingA ? a : b;
+      return withChoices({
         type: 'missing',
         a, b,
-        correct: missingA ? a : b,
+        correct: answer,
         display,
-      };
+      });
     }
 
     case 'multichoice': {
-      const wrongChoices = generateWrongChoices(correct, 3);
-      const choices = shuffle([correct, ...wrongChoices]);
-      return {
+      return withChoices({
         type: 'multichoice',
         a, b, correct,
         display: `${a} × ${b} = ؟`,
-        choices,
-      };
+      });
     }
 
     case 'truefalse': {
@@ -127,23 +125,29 @@ export function generateQuestion(
       const c = randomInt(2, 4);
       const intermediate = correct;
       const chainResult = intermediate * c;
-      return {
+      return withChoices({
         type: 'chain',
         a, b,
         correct: chainResult,
         display: `${a} × ${b} = ${intermediate}`,
         chainDisplay: `${intermediate} × ${c} = ؟`,
-      };
+      });
     }
 
     default: {
-      return {
+      return withChoices({
         type: 'normal',
         a, b, correct,
         display: `${a} × ${b} = ؟`,
-      };
+      });
     }
   }
+}
+
+function withChoices(question: Question): Question {
+  if (question.type === 'truefalse') return question;
+  const wrong = generateWrongChoices(question.correct, 3);
+  return { ...question, choices: shuffle([question.correct, ...wrong]) };
 }
 
 export function generateBossQuestion(season: number): Question {
@@ -151,10 +155,9 @@ export function generateBossQuestion(season: number): Question {
   const a = randomInt(3, maxF);
   const b = randomInt(3, maxF);
   const correct = a * b;
-  // باس همیشه سوال معمولی ولی سخت‌تر
-  return {
+  return withChoices({
     type: 'normal',
     a, b, correct,
     display: `${a} × ${b} = ؟`,
-  };
+  });
 }

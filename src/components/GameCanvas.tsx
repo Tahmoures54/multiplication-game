@@ -380,7 +380,6 @@ function drawShark(
     ctx.lineWidth = 2;
     const textWidth = ctx.measureText(shark.message).width;
     const padX = 12;
-    const padY = 8;
     const bw = Math.min(textWidth + padX * 2, canvasW * 0.6);
     const bh = 28;
     const bx = msgX - bw / 2;
@@ -982,14 +981,7 @@ export const GameCanvas = ({
       ref={canvasRef}
       width={width * dpr}
       height={height * dpr}
-      style={{
-        width: '100%',
-        height: 'auto',
-        aspectRatio: `${width}/${height}`,
-        borderRadius: '14px',
-        border: '2px solid #1e3a5f',
-        boxShadow: '0 4px 20px rgba(0, 100, 200, 0.3)',
-      }}
+      className="game-canvas"
     />
   );
 };

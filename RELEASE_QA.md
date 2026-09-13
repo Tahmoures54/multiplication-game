@@ -1,4 +1,4 @@
-# Fish Math 1.1.0 — Release QA
+# Fish Math 1.2.0 — Release QA
 
 ## Automated checks
 - `npm ci`
@@ -9,20 +9,19 @@
 ## Android release checks
 - Target SDK: 36
 - Compile SDK: 36
-- versionCode: 2
-- versionName: 1.1.0
+- versionCode: 3
+- versionName: 1.2.0
 - Verify signed AAB before Play Console upload.
 
 ## Manual device checks
-- Fresh install launches successfully.
+- Fresh install launches full-screen (no letterboxed playfield).
 - Existing save survives app restart and update.
 - Audio starts only after user interaction and stops/resumes correctly.
-- Pause/resume freezes gameplay and timer.
-- Numeric keypad works on small and large phones.
-- Multiple choice and true/false answers work.
-- Chain questions show the intermediate and final expressions correctly.
-- Boss battle completes correctly.
-- Aquarium and achievements open without losing progress.
-- Learning Progress screen reports table accuracy correctly.
-- App works without network access.
+- Pause/resume freezes gameplay and timer behind a full-screen overlay.
+- There is no numeric keypad; answers are only multiple-choice or true/false taps.
+- Chain questions show the intermediate and final expressions correctly, then four choices.
+- Boss battle completes correctly with choices.
+- Aquarium, achievements, and learning progress open without losing progress.
+- WhatsApp support opens for +989160684552. No developer contact/about screen.
+- App works without network access (except WhatsApp support).
 - Back/foreground transitions do not duplicate timers or audio.

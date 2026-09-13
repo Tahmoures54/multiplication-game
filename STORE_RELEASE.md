@@ -5,7 +5,7 @@
 |------|--------|
 | نام | ماهیگیری جدول ضرب |
 | Package ID | `com.arsha.fishmath` |
-| نسخه | `1.1.0` (versionCode = 2) |
+| نسخه | `1.2.0` (versionCode = 3) |
 | حداقل اندروید | 5.1 (API 22) |
 | هدف | API 36 |
 | دسته پیشنهادی | آموزش / بازی آموزشی کودکان |
@@ -68,7 +68,8 @@ cd android
 یک بازی آموزشی سرگرم‌کننده برای کودکان که تمرین جدول ضرب را به ماجراجویی ماهیگیری تبدیل می‌کند!
 
 ✨ ویژگی‌ها:
-• کیپد عددی بزرگ و رنگی (بدون نیاز به کیبورد)
+• تجربه تمام‌صفحه با دنیای دریایی زنده
+• پاسخ فقط با انتخاب گزینه — بدون تایپ و بدون کیپد
 • ۱۰ فصل با سختی پیشرونده
 • فصل‌های بصری بهار، تابستان، پاییز و زمستان
 • کوسه‌خالخالی بامزه و سیستم باس
@@ -79,7 +80,7 @@ cd android
 • کاملاً آفلاین و بدون تبلیغات
 
 مناسب برای کودکان ۷ تا ۱۲ سال.
-محصول **Fish Math** برای یادگیری شاد و تمرین روزانه.
+پشتیبانی واتساپ: +989160684552
 ```
 
 ### کلمات کلیدی پیشنهادی
@@ -108,6 +109,14 @@ cd android
 متن کامل در فایل `PRIVACY_POLICY.md` است.  
 لینک آن را در کنسول گوگل‌پلی قرار دهید (مثلاً روی گیت‌هاب یا سایت خودتان).
 
+
+## Fish Math 1.2.0 Release Notes
+
+- Full-screen ocean world; HUD and answers overlay the live canvas.
+- Children now always answer by tapping a choice. Numeric typing and the keypad are gone.
+- Developer/contact details were removed. Support is WhatsApp +989160684552.
+- Pause is a full-screen overlay. Duplicate progress button on the start screen is gone.
+- Android versionCode: 3; versionName: 1.2.0.
 
 ## Fish Math 1.1.0 Release Notes
 

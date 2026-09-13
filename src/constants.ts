@@ -1,5 +1,18 @@
 // ===== ثوابت بازی ماهیگیری جدول ضرب =====
 
+export const SUPPORT_WHATSAPP_NUMBER = '989160684552';
+export const SUPPORT_WHATSAPP_DISPLAY = '+98 916 068 4552';
+export const SUPPORT_WHATSAPP_URL =
+  'https://wa.me/989160684552?text=' +
+  encodeURIComponent('سلام، درباره بازی ماهیگیری جدول ضرب کمک می‌خوام.');
+
+export const CHOICE_GRADIENTS = [
+  'linear-gradient(160deg, #38bdf8 0%, #1d4ed8 100%)',
+  'linear-gradient(160deg, #fbbf24 0%, #ea580c 100%)',
+  'linear-gradient(160deg, #34d399 0%, #047857 100%)',
+  'linear-gradient(160deg, #f472b6 0%, #be185d 100%)',
+];
+
 export const TOTAL_SEASONS = 10;
 export const EPISODES_PER_SEASON = 10;
 export const MIN_FACTOR = 1;
