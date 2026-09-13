@@ -139,7 +139,7 @@ export function GameModals({
           <p className="text-sky-100 text-sm leading-8 text-center mb-4">
             اگر سوال یا مشکلی داشتی، از واتساپ پیام بده.
             <br />
-            <span className="text-emerald-300 font-bold tracking-wide">{SUPPORT_WHATSAPP_DISPLAY}</span>
+            <span className="text-emerald-300 font-bold tracking-wide" dir="ltr">{SUPPORT_WHATSAPP_DISPLAY}</span>
           </p>
           <button
             type="button"

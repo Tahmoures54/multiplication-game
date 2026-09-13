@@ -308,7 +308,7 @@ export default function App() {
         selectedChoice: null,
         feedbackText: isNewSeason
           ? `🎊 فصل جدید! فصل ${newSeason} - ${vs === 'spring' ? '🌸 بهار' : vs === 'summer' ? '☀️ تابستان' : vs === 'autumn' ? '🍂 پاییز' : '❄️ زمستان'}`
-          : 'یکی را انتخاب کن! 🎯',
+          : '',
         feedbackColor: isNewSeason ? '#22c55e' : '#f8fafc',
       };
     });
@@ -344,7 +344,7 @@ export default function App() {
       powerUps: loadedPowerUps,
       soundOn: game.soundOn,
       musicOn: true,
-      feedbackText: 'یکی از گزینه‌های رنگی را لمس کن! 🎯',
+      feedbackText: '',
       feedbackColor: '#f8fafc',
     });
   }, [engine, game.soundOn, updateSave]);

@@ -31,7 +31,7 @@ export function SupportFab({ variant = 'fab' }: Props) {
         style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)' }}
       >
         <span className="text-lg">💬</span>
-        پشتیبانی واتساپ · {SUPPORT_WHATSAPP_DISPLAY}
+        پشتیبانی واتساپ · <span dir="ltr">{SUPPORT_WHATSAPP_DISPLAY}</span>
       </button>
     );
   }
