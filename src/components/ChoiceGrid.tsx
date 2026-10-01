@@ -1,5 +1,3 @@
-import { CHOICE_GRADIENTS } from '../constants';
-
 interface Props {
   choices: number[];
   selected: number | null;
@@ -15,15 +13,14 @@ export function ChoiceGrid({ choices, selected, correct, disabled, onPick }: Pro
         const isSelected = selected === choice;
         const ring = isSelected
           ? choice === correct
-            ? 'ring-4 ring-emerald-300 scale-[0.98]'
-            : 'ring-4 ring-rose-400 scale-[0.98]'
+            ? 'ring-4 ring-emerald-200 scale-[0.98]'
+            : 'ring-4 ring-rose-200 scale-[0.98]'
           : '';
         return (
           <button
             key={`${choice}-${i}`}
             type="button"
-            className={`choice-btn py-5 rounded-[1.6rem] text-white font-black text-4xl shadow-lg active:scale-95 transition-all disabled:opacity-70 ${ring}`}
-            style={{ background: CHOICE_GRADIENTS[i % CHOICE_GRADIENTS.length] }}
+            className={`choice-btn glass-answer py-4 rounded-[1.6rem] text-white font-black text-4xl active:scale-95 transition-all disabled:opacity-70 ${ring}`}
             onClick={() => onPick(choice)}
             disabled={disabled}
           >
