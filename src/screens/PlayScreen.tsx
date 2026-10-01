@@ -1,6 +1,6 @@
 import { GameHud } from '../components/GameHud';
 import { ChoiceGrid } from '../components/ChoiceGrid';
-import type { GameState } from '../types';
+import type { GameState, PowerUp } from '../types';
 
 interface Props {
   game: GameState;
@@ -9,18 +9,24 @@ interface Props {
   timerColor: string;
   onChoice: (choice: number) => void;
   onTrueFalse: (isTrue: boolean) => void;
+  onHint: () => void;
+  onSkip: () => void;
   onPause: () => void;
+  onSound: () => void;
+  onMusic: () => void;
+  onPowerUp: (type: PowerUp['type']) => void;
 }
 
-export function PlayScreen({
-  game,
-  seasonLabel,
-  timerPercent,
-  timerColor,
-  onChoice,
-  onTrueFalse,
-  onPause,
-}: Props) {
+export function PlayScreen(props: Props) {
+  const {
+    game,
+    seasonLabel,
+    timerPercent,
+    timerColor,
+    onChoice,
+    onTrueFalse,
+    onPause,
+  } = props;
   const locked = game.paused || !game.timerRunning;
   const choices = game.question.choices ?? [];
 
