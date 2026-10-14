@@ -106,7 +106,7 @@ export default function App() {
   const [showProgress, setShowProgress] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showUnlock, setShowUnlock] = useState(false);
-  const [, setHasFullUnlock] = useState(false);
+  const [hasFullUnlock, setHasFullUnlock] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
   const hasFullUnlockRef = useRef(false);
@@ -806,6 +806,7 @@ export default function App() {
           onAchievements={() => setShowAchievements(true)}
           onProgress={() => setShowProgress(true)}
           onSupport={() => setShowSupport(true)}
+          hasFullUnlock={hasFullUnlock}
           onUnlock={() => { setPurchaseError(''); setShowUnlock(true); }}
         />
       )}
@@ -889,9 +890,7 @@ export default function App() {
           }}
           onContinueFree={() => {
             setShowUnlock(false);
-            setGame(prev => ({ ...prev, timerRunning: true, paused: false,
-              feedbackText: 'فصل‌های ۱ تا ۴ در دسترس هستند. هر وقت خواستی می‌توانی خرید را انجام بدهی.',
-              feedbackColor: '#7dd3fc' }));
+            setGame(prev => ({ ...prev, screen: 'start', timerRunning: false, paused: false }));
           }}
         />
       )}
