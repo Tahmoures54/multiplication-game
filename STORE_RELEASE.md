@@ -122,7 +122,8 @@ cd android
 - Children now always answer by tapping a choice. Numeric typing and the keypad are gone.
 - Developer/contact details were removed. Support is WhatsApp +989160684552.
 - Pause is a full-screen overlay. Duplicate progress button on the start screen is gone.
-- Release workflow hardened to validate the signing keystore and verify signed APK/AAB outputs.\n- Android versionCode: 4; versionName: 1.2.1.
+- Release workflow hardened to validate the signing keystore and verify signed APK/AAB outputs.
+- Android versionCode: 4; versionName: 1.2.1.
 
 ## Fish Math 1.1.0 Release Notes
 
