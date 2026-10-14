@@ -4,6 +4,8 @@ import { GameModals } from './components/GameModals';
 import { StartScreen } from './screens/StartScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { GameOverScreen } from './screens/GameOverScreen';
+import { UnlockSeasonsModal } from './components/UnlockSeasonsModal';
+import { bazaarBilling } from './services/bazaarBilling';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useViewport } from './hooks/useViewport';
 import { generateQuestion, generateBossQuestion } from './utils/questions';
@@ -103,6 +105,12 @@ export default function App() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
+  const [showUnlock, setShowUnlock] = useState(false);
+  const [hasFullUnlock, setHasFullUnlock] = useState(false);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [purchaseError, setPurchaseError] = useState('');
+  const hasFullUnlockRef = useRef(false);
+  hasFullUnlockRef.current = hasFullUnlock;
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [saveData, setSaveData] = useState<SaveData>(loadSave());
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
@@ -116,6 +124,31 @@ export default function App() {
   const answerLockRef = useRef(false);
 
   const engine = useGameEngine(canvasW, canvasH);
+
+  useEffect(() => {
+    let active = true;
+    const restore = async () => {
+      try {
+        const owned = await bazaarBilling.status();
+        if (active && owned) {
+          hasFullUnlockRef.current = true;
+          setHasFullUnlock(true);
+          return;
+        }
+        if (active && bazaarBilling.isNative()) {
+          const restored = await bazaarBilling.restore();
+          if (active && restored) {
+            hasFullUnlockRef.current = true;
+            setHasFullUnlock(true);
+          }
+        }
+      } catch {
+        // The game remains playable in free seasons if Bazaar is unavailable.
+      }
+    };
+    void restore();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     engine.spawnBackgroundFish();
@@ -212,6 +245,17 @@ export default function App() {
   }, [game.timeFrozen, game.timeFreezeLeft]);
 
   const advanceQuestion = useCallback(() => {
+    const current = gameRef.current;
+    if (current.season === 4 && current.episode === EPISODES_PER_SEASON &&
+        current.isBoss && !hasFullUnlockRef.current) {
+      answerLockRef.current = false;
+      setShowUnlock(true);
+      setPurchaseError('');
+      setGame(prev => ({ ...prev, timerRunning: false, paused: false,
+        feedbackText: '🎉 فصل‌های رایگان تمام شدند! می‌توانی فصل‌های بعدی را باز کنی.',
+        feedbackColor: '#fbbf24' }));
+      return;
+    }
     answerLockRef.current = false;
     setGame(prev => {
       let newSeason = prev.season;
@@ -762,6 +806,7 @@ export default function App() {
           onAchievements={() => setShowAchievements(true)}
           onProgress={() => setShowProgress(true)}
           onSupport={() => setShowSupport(true)}
+          onUnlock={() => { setPurchaseError(''); setShowUnlock(true); }}
         />
       )}
 
@@ -792,6 +837,62 @@ export default function App() {
           onAquarium={() => setShowAquarium(true)}
           onAchievements={() => setShowAchievements(true)}
           onSupport={() => setShowSupport(true)}
+        />
+      )}
+
+      {showUnlock && (
+        <UnlockSeasonsModal
+          loading={purchaseLoading}
+          error={purchaseError}
+          onBuy={async () => {
+            if (purchaseLoading) return;
+            setPurchaseLoading(true);
+            setPurchaseError('');
+            try {
+              const owned = await bazaarBilling.purchase();
+              if (!owned) throw new Error('بازار مالکیت خرید را تأیید نکرد.');
+              hasFullUnlockRef.current = true;
+              setHasFullUnlock(true);
+              setShowUnlock(false);
+              // If the child reached the paywall at the end of season 4,
+              // continue from the saved boss boundary instead of restarting.
+              if (gameRef.current.season === 4 && gameRef.current.episode === EPISODES_PER_SEASON && gameRef.current.isBoss) {
+                advanceQuestion();
+              }
+            } catch (error) {
+              setPurchaseError(error instanceof Error ? error.message : 'خرید کامل نشد؛ لطفاً دوباره تلاش کن.');
+            } finally {
+              setPurchaseLoading(false);
+            }
+          }}
+          onRestore={async () => {
+            if (purchaseLoading) return;
+            setPurchaseLoading(true);
+            setPurchaseError('');
+            try {
+              const owned = await bazaarBilling.restore();
+              if (!owned) {
+                setPurchaseError('خریدی برای این حساب کافه‌بازار پیدا نشد.');
+                return;
+              }
+              hasFullUnlockRef.current = true;
+              setHasFullUnlock(true);
+              setShowUnlock(false);
+              if (gameRef.current.season === 4 && gameRef.current.episode === EPISODES_PER_SEASON && gameRef.current.isBoss) {
+                advanceQuestion();
+              }
+            } catch (error) {
+              setPurchaseError(error instanceof Error ? error.message : 'بازیابی خرید انجام نشد.');
+            } finally {
+              setPurchaseLoading(false);
+            }
+          }}
+          onContinueFree={() => {
+            setShowUnlock(false);
+            setGame(prev => ({ ...prev, timerRunning: true, paused: false,
+              feedbackText: 'فصل‌های ۱ تا ۴ در دسترس هستند. هر وقت خواستی می‌توانی خرید را انجام بدهی.',
+              feedbackColor: '#7dd3fc' }));
+          }}
         />
       )}
 
