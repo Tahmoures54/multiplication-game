@@ -106,7 +106,7 @@ export default function App() {
   const [showProgress, setShowProgress] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showUnlock, setShowUnlock] = useState(false);
-  const [hasFullUnlock, setHasFullUnlock] = useState(false);
+  const [, setHasFullUnlock] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
   const hasFullUnlockRef = useRef(false);
