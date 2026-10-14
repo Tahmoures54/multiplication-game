@@ -17,6 +17,10 @@ on:
           - release
           - bundle
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build Android
