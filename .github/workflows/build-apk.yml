@@ -113,6 +113,16 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
+      - name: 🔐 Check whether a Bazaar-enabled release can be built
+        id: release_gate
+        run: |
+          if [ -n "$BAZAAR_RSA_PUBLIC_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Bazaar RSA secret is missing; only the debug APK will be built on this push."
+          fi
+
       - name: 🔎 Validate Bazaar key for requested release
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
         run: |
@@ -122,12 +132,12 @@ jobs:
           fi
 
       - name: 🔨 Build Release APK
-        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
       - name: 🧪 Verify Release APK signature
-        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -157,7 +167,7 @@ jobs:
           retention-days: 30
 
       - name: 📤 Upload Release APK
-        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Release-APK
