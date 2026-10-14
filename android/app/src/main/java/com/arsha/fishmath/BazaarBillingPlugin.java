@@ -24,7 +24,6 @@ public class BazaarBillingPlugin extends Plugin {
     private BillingClient billingClient;
     private SharedPreferences preferences;
     private PluginCall pendingPurchase;
-    private PluginCall pendingRestore;
     private Inventory latestInventory;
     private boolean inventoryReady = false;
 
@@ -54,7 +53,6 @@ public class BazaarBillingPlugin extends Plugin {
             public void onBillingStatus(int code) {
                 if (code != TableCodes.SETUP_SUCCESS) {
                     rejectPendingPurchase("اتصال به پرداخت کافه‌بازار برقرار نشد (کد " + code + ").");
-                    rejectPendingRestore("بازیابی خرید از کافه‌بازار انجام نشد (کد " + code + ").");
                 }
             }
 
@@ -67,7 +65,6 @@ public class BazaarBillingPlugin extends Plugin {
                 if (verified) {
                     preferences.edit().putBoolean(OWNED_KEY, true).apply();
                 }
-                resolvePendingRestore(preferences.getBoolean(OWNED_KEY, false) || verified);
             }
         });
     }
@@ -110,11 +107,7 @@ public class BazaarBillingPlugin extends Plugin {
             resolve(call, verified);
             return;
         }
-        if (pendingRestore != null) {
-            call.reject("بازیابی خرید در حال انجام است.");
-            return;
-        }
-        pendingRestore = call;
+        call.reject("موجودی بازار هنوز آماده نیست. چند لحظه صبر کنید و دوباره بازیابی را بزنید.");
     }
 
     private boolean isVerifiedPurchase(Purchase purchase) {
@@ -142,20 +135,6 @@ public class BazaarBillingPlugin extends Plugin {
         PluginCall call = pendingPurchase;
         pendingPurchase = null;
         call.reject(message);
-    }
-
-    private void rejectPendingRestore(String message) {
-        if (pendingRestore == null) return;
-        PluginCall call = pendingRestore;
-        pendingRestore = null;
-        call.reject(message);
-    }
-
-    private void resolvePendingRestore(boolean owned) {
-        if (pendingRestore == null) return;
-        PluginCall call = pendingRestore;
-        pendingRestore = null;
-        resolve(call, owned);
     }
 
     private void resolve(PluginCall call, boolean owned) {
