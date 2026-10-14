@@ -12,7 +12,13 @@
 
 ---
 
-## ۱. ساخت Keystore (یک‌بار برای همیشه)
+## ۱. کلید امضای انتشار (یک‌بار برای همیشه)
+
+برای این مخزن، کلید انتشار از طریق GitHub Actions Secrets تنظیم شده است. فایل keystore و نسخه پشتیبان آن را خصوصی نگه دارید و برای به‌روزرسانی‌های بعدی از همان کلید استفاده کنید. در CI، فایل کلید به‌صورت موقت ساخته می‌شود و وارد مخزن نمی‌شود.
+
+برای انتشار در **کافه‌بازار** از `Run workflow` گزینه `release` را انتخاب کنید؛ فایل خروجی `FishMath-Release-APK` است. گزینه `bundle` برای ساخت AAB است و برای کافه‌بازار فقط در صورتی استفاده شود که پنل انتشار شما آن را بپذیرد.
+
+## ۱. ساخت Keystore محلی (اختیاری)
 
 ```bash
 keytool -genkey -v -keystore fishmath-release.keystore -alias fishmath -keyalg RSA -keysize 2048 -validity 10000
@@ -128,4 +134,4 @@ cd android
 - Android build target updated to API 36 for the August 31, 2026 Google Play requirement.
 - Android versionCode: 2; versionName: 1.1.0.
 
-Before upload, create a release keystore and verify the signed AAB on a physical Android device. Google Play currently requires new apps and updates to target Android 16 (API 36) or higher starting August 31, 2026.
+Before upload to Cafe Bazaar, install and test the signed `FishMath-Release-APK` on a physical Android device, and verify package name, version, signature, offline operation, and WhatsApp support behavior. Google Play currently requires new apps and updates to target Android 16 (API 36) or higher starting August 31, 2026.
