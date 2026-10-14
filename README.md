@@ -24,6 +24,7 @@ npm run android:bundle
 ```
 
 راهنمای انتشار: **[STORE_RELEASE.md](STORE_RELEASE.md)**  
+راهنمای راه‌اندازی پرداخت دائمی کافه‌بازار: **[BAZAAR_BILLING_SETUP.md](BAZAAR_BILLING_SETUP.md)**  
 سیاست حریم خصوصی: **[PRIVACY_POLICY.md](PRIVACY_POLICY.md)**
 
 ---
