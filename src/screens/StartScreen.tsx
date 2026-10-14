@@ -26,8 +26,11 @@ export function StartScreen({
         <h1 className="text-3xl font-black text-center text-amber-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.65)] mb-1">
           ماهیگیری جدول ضرب
         </h1>
-        <p className="text-sky-100 text-center text-sm mb-4 drop-shadow">
+        <p className="text-sky-100 text-center text-sm mb-1 drop-shadow">
           یکی از گزینه‌ها را لمس کن و ماهی بگیر!
+        </p>
+        <p className="text-cyan-100/90 text-center text-xs font-semibold mb-4 drop-shadow">
+          با همکاری: دانش‌آموز سید علی موسوی از شهر اسیر
         </p>
 
         <div className="w-full grid grid-cols-3 gap-2 mb-4">
