@@ -5,7 +5,7 @@
 |------|--------|
 | نام | ماهیگیری جدول ضرب |
 | Package ID | `com.arsha.fishmath` |
-| نسخه | `1.2.0` (versionCode = 3) |
+| نسخه | `1.2.1` (versionCode = 4) |
 | حداقل اندروید | 5.1 (API 22) |
 | هدف | API 36 |
 | دسته پیشنهادی | آموزش / بازی آموزشی کودکان |
@@ -110,13 +110,13 @@ cd android
 لینک آن را در کنسول گوگل‌پلی قرار دهید (مثلاً روی گیت‌هاب یا سایت خودتان).
 
 
-## Fish Math 1.2.0 Release Notes
+## Fish Math 1.2.1 Release Notes
 
 - Full-screen ocean world; HUD and answers overlay the live canvas.
 - Children now always answer by tapping a choice. Numeric typing and the keypad are gone.
 - Developer/contact details were removed. Support is WhatsApp +989160684552.
 - Pause is a full-screen overlay. Duplicate progress button on the start screen is gone.
-- Android versionCode: 3; versionName: 1.2.0.
+- Release workflow hardened to validate the signing keystore and verify signed APK/AAB outputs.\n- Android versionCode: 4; versionName: 1.2.1.
 
 ## Fish Math 1.1.0 Release Notes
 
