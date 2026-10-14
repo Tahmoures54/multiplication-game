@@ -27,7 +27,7 @@ keytool -genkey -v -keystore fishmath-release.keystore -alias fishmath -keyalg R
 سپس فایل `android/keystore.properties` بسازید:
 
 ```properties
-storeFile=../fishmath-release.keystore
+storeFile=../../fishmath-release.keystore
 storePassword=رمز_شما
 keyAlias=fishmath
 keyPassword=رمز_شما
