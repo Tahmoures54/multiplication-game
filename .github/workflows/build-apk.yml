@@ -113,7 +113,7 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
 
       - name: 🧪 Verify Release APK signature
-        if: ${{ github.event.inputs.build_type == 'release' }}
+        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -143,7 +143,7 @@ jobs:
           retention-days: 30
 
       - name: 📤 Upload Release APK
-        if: ${{ github.event.inputs.build_type == 'release' }}
+        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Release-APK
