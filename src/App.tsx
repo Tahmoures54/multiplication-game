@@ -482,7 +482,7 @@ export default function App() {
           setGame(prev => ({
             ...prev,
             timerRunning: false,
-            isBoss: false,
+            isBoss: true,
             bossHP: 0,
             combo: newCombo,
             bestCombo: Math.max(prev.bestCombo, newCombo),
