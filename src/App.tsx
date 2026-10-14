@@ -135,13 +135,6 @@ export default function App() {
           setHasFullUnlock(true);
           return;
         }
-        if (active && bazaarBilling.isNative()) {
-          const restored = await bazaarBilling.restore();
-          if (active && restored) {
-            hasFullUnlockRef.current = true;
-            setHasFullUnlock(true);
-          }
-        }
       } catch {
         // The game remains playable in free seasons if Bazaar is unavailable.
       }
