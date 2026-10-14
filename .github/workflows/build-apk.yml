@@ -113,13 +113,21 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
+      - name: 🔎 Validate Bazaar key for requested release
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
+        run: |
+          if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
+            echo "::error::Set the BAZAAR_RSA_PUBLIC_KEY repository secret before building a release APK."
+            exit 1
+          fi
+
       - name: 🔨 Build Release APK
-        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
+        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
       - name: 🧪 Verify Release APK signature
-        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
+        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -149,7 +157,7 @@ jobs:
           retention-days: 30
 
       - name: 📤 Upload Release APK
-        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
+        if: ${{ (github.event_name == 'push' && env.BAZAAR_RSA_PUBLIC_KEY != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Release-APK
@@ -167,4 +175,7 @@ jobs:
       - name: ℹ️ Build Info
         run: |
           echo "✅ Build completed successfully!"
+          if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
+            echo "::warning::Release APK was skipped because BAZAAR_RSA_PUBLIC_KEY is not configured. Do not publish an APK built without the Bazaar public key."
+          fi
           find android/app/build/outputs -name "*.apk" -o -name "*.aab" 2>/dev/null | while read f; do ls -lh "$f"; done
