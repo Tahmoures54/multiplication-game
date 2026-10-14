@@ -29,7 +29,7 @@ export function UnlockSeasonsModal({ loading, error, onBuy, onRestore, onContinu
           قبلاً خریده‌ام؛ بازیابی خرید
         </button>
         <button type="button" disabled={loading} onClick={onContinueFree} className="w-full px-4 py-2 text-sm text-slate-300 underline disabled:opacity-60">
-          فعلاً ادامه بدهم
+          بازگشت به صفحه شروع
         </button>
       </section>
     </div>
