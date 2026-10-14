@@ -1,12 +1,11 @@
 package com.arsha.fishmath;
 
 import android.content.SharedPreferences;
-import android.util.Base64;
 
 import com.farasource.billing.BillingClient;
 import com.farasource.billing.BillingHelper;
-import com.farasource.billing.TableCodes;
-import com.farasource.billing.listener.OnBillingResultListener;
+import com.farasource.billing.util.TableCodes;
+import com.farasource.billing.communication.OnBillingResultListener;
 import com.farasource.billing.util.Inventory;
 import com.farasource.billing.util.Purchase;
 import com.getcapacitor.JSObject;
@@ -15,7 +14,6 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-import java.nio.charset.StandardCharsets;
 
 @CapacitorPlugin(name = "BazaarBilling")
 public class BazaarBillingPlugin extends Plugin {
