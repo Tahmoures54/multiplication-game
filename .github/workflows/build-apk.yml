@@ -60,6 +60,36 @@ jobs:
       - name: 🔄 Capacitor sync
         run: npx cap sync android
 
+      - name: 🔐 Configure release signing
+        if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'bundle') }}
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in RELEASE_KEYSTORE_BASE64 RELEASE_KEYSTORE_PASSWORD RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required GitHub Actions secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > android/app/fishmath-release.jks
+          test -s android/app/fishmath-release.jks
+          keytool -list -keystore android/app/fishmath-release.jks \\
+            -storepass "$RELEASE_KEYSTORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" >/dev/null
+
+          umask 077
+          cat > android/keystore.properties <<EOF
+          storeFile=fishmath-release.jks
+          storePassword=$RELEASE_KEYSTORE_PASSWORD
+          keyAlias=$RELEASE_KEY_ALIAS
+          keyPassword=$RELEASE_KEY_PASSWORD
+          EOF
+          echo "Release keystore decoded and alias verified."
+
       - name: 🔑 Grant Gradle permissions
         run: chmod +x android/gradlew
 
