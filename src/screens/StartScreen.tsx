@@ -16,7 +16,6 @@ export function StartScreen({
   onAquarium,
   onAchievements,
   onProgress,
-  onSupport,
 }: Props) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col justify-end overflow-hidden">
@@ -62,9 +61,6 @@ export function StartScreen({
         </div>
 
         <SupportFab variant="pill" />
-        <button type="button" className="mt-2 text-sky-200/80 text-xs underline" onClick={onSupport}>
-          راهنمای پشتیبانی
-        </button>
       </div>
     </div>
   );
