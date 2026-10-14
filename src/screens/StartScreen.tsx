@@ -8,6 +8,7 @@ interface Props {
   onAchievements: () => void;
   onProgress: () => void;
   onSupport: () => void;
+  onUnlock: () => void;
 }
 
 export function StartScreen({
@@ -16,6 +17,7 @@ export function StartScreen({
   onAquarium,
   onAchievements,
   onProgress,
+  onUnlock,
 }: Props) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col justify-end overflow-hidden">
@@ -55,6 +57,10 @@ export function StartScreen({
           onClick={onStart}
         >
           🎮 بزن بریم!
+        </button>
+
+        <button type="button" onClick={onUnlock} className="w-full rounded-2xl border border-amber-300/40 bg-amber-400/10 py-3 mb-3 text-sm font-extrabold text-amber-200 active:scale-[0.98] transition-transform">
+          🔓 بازکردن دائمی فصل‌های ۵ تا ۱۰
         </button>
 
         <div className="grid grid-cols-3 gap-2 w-full mb-3">
