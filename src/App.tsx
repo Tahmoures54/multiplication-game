@@ -122,6 +122,57 @@ export default function App() {
   const saveRef = useRef(saveData);
   saveRef.current = saveData;
   const answerLockRef = useRef(false);
+  const lifecyclePausedRef = useRef(false);
+
+  // Pause automatically when Android backgrounds the WebView or the page is hidden.
+  // Resume only if this lifecycle handler paused the game, never if the child paused it manually.
+  useEffect(() => {
+    const pauseForBackground = () => {
+      const current = gameRef.current;
+      if ((current.screen === 'playing' || current.screen === 'boss') &&
+          current.timerRunning && !current.paused) {
+        lifecyclePausedRef.current = true;
+        setGame(prev => {
+          if ((prev.screen !== 'playing' && prev.screen !== 'boss') ||
+              !prev.timerRunning || prev.paused) return prev;
+          return { ...prev, paused: true };
+        });
+      }
+      stopBGMusic();
+    };
+
+    const resumeFromBackground = () => {
+      if (!lifecyclePausedRef.current) return;
+      lifecyclePausedRef.current = false;
+      setGame(prev => {
+        if ((prev.screen !== 'playing' && prev.screen !== 'boss') ||
+            !prev.timerRunning || !prev.paused) return prev;
+        return { ...prev, paused: false };
+      });
+      const current = gameRef.current;
+      if (current.musicOn && (current.screen === 'playing' || current.screen === 'boss')) {
+        startBGMusic();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') pauseForBackground();
+      else resumeFromBackground();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', pauseForBackground);
+    window.addEventListener('pageshow', resumeFromBackground);
+
+    // A tab/app may mount while already hidden (for example, after Android restores it).
+    if (document.visibilityState === 'hidden') pauseForBackground();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', pauseForBackground);
+      window.removeEventListener('pageshow', resumeFromBackground);
+    };
+  }, []);
 
   const engine = useGameEngine(canvasW, canvasH);
 
