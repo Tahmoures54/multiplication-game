@@ -108,9 +108,11 @@ export function generateQuestion(
 
     case 'truefalse': {
       const isCorrectProposal = Math.random() < 0.5;
-      const proposed = isCorrectProposal
-        ? correct
-        : correct + randomInt(-3, 3) || correct + 1;
+      // False statements must differ from the correct product; zero was previously
+      // a possible offset and accidentally generated a true statement.
+      const wrongOffsets = [-3, -2, -1, 1, 2, 3].filter(offset => correct + offset > 0);
+      const wrongOffset = wrongOffsets[randomInt(0, wrongOffsets.length - 1)];
+      const proposed = isCorrectProposal ? correct : correct + wrongOffset;
       return {
         type: 'truefalse',
         a, b, correct,
