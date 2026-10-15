@@ -114,12 +114,10 @@ export default function App() {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [saveData, setSaveData] = useState<SaveData>(loadSave());
   const questionStartTimeRef = useRef(Date.now());
-  const [mistakesInSeason, setMistakesInSeason] = useState(0);
   const mistakesInSeasonRef = useRef(0);
 
   const recordSeasonMistake = useCallback(() => {
     mistakesInSeasonRef.current += 1;
-    setMistakesInSeason(mistakesInSeasonRef.current);
   }, []);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -377,7 +375,6 @@ export default function App() {
             checkAchievement('no_mistake');
           }
           mistakesInSeasonRef.current = 0;
-    setMistakesInSeason(0);
 
           newSeason = prev.season + 1;
           newEpisode = 1;
@@ -457,7 +454,6 @@ export default function App() {
     answerLockRef.current = false;
 
     mistakesInSeasonRef.current = 0;
-    setMistakesInSeason(0);
     questionStartTimeRef.current = Date.now();
 
     updateSave(s => ({ ...s, totalPlayed: s.totalPlayed + 1 }));
