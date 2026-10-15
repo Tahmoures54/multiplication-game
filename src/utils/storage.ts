@@ -42,16 +42,21 @@ export function loadSave(): SaveData {
         saveVersion: SAVE_VERSION,
       };
       // Normalize table statistics and prevent invalid values from old/corrupt saves.
-      if (data.tableStats && typeof data.tableStats === 'object') {
+      if (data.tableStats && typeof data.tableStats === 'object' && !Array.isArray(data.tableStats)) {
         for (const [key, rawStat] of Object.entries(data.tableStats)) {
+          const factor = Number(key);
+          if (!Number.isInteger(factor) || factor < 1 || factor > 12 || !rawStat || typeof rawStat !== 'object') continue;
           const stat = rawStat as Partial<SaveData['tableStats'][string]>;
+          const attempts = Math.max(0, Math.floor(Number(stat.attempts) || 0));
+          const correct = Math.min(attempts, Math.max(0, Math.floor(Number(stat.correct) || 0)));
+          const bestResponseTime = Number(stat.bestResponseTime);
           merged.tableStats[key] = {
-            attempts: Math.max(0, Number(stat.attempts) || 0),
-            correct: Math.max(0, Number(stat.correct) || 0),
-            totalResponseTime: Math.max(0, Number(stat.totalResponseTime) || 0),
-            bestResponseTime: Number.isFinite(Number(stat.bestResponseTime)) ? Number(stat.bestResponseTime) : Number.MAX_SAFE_INTEGER,
-            currentStreak: Math.max(0, Number(stat.currentStreak) || 0),
-            bestStreak: Math.max(0, Number(stat.bestStreak) || 0),
+            attempts,
+            correct,
+            totalResponseTime: Math.max(0, Number.isFinite(Number(stat.totalResponseTime)) ? Number(stat.totalResponseTime) : 0),
+            bestResponseTime: Number.isFinite(bestResponseTime) && bestResponseTime >= 0 ? bestResponseTime : Number.MAX_SAFE_INTEGER,
+            currentStreak: Math.max(0, Math.floor(Number(stat.currentStreak) || 0)),
+            bestStreak: Math.max(0, Math.floor(Number(stat.bestStreak) || 0)),
           };
         }
       }
