@@ -253,6 +253,14 @@ export default function App() {
     }
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
+      // Claim the answer lock synchronously on the final second. This prevents a
+      // tap and the timeout callback from both recording an outcome for one question.
+      const current = gameRef.current;
+      if (current.timerRunning && !current.paused && !current.timeFrozen &&
+          current.timeLeft <= 1 && !answerLockRef.current) {
+        answerLockRef.current = true;
+      }
+
       setGame(prev => {
         if (!prev.timerRunning || prev.paused || prev.timeFrozen) return prev;
         const newTime = prev.timeLeft - 1;
