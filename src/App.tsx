@@ -113,7 +113,7 @@ export default function App() {
   hasFullUnlockRef.current = hasFullUnlock;
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [saveData, setSaveData] = useState<SaveData>(loadSave());
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const questionStartTimeRef = useRef(Date.now());
   const [mistakesInSeason, setMistakesInSeason] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -171,6 +171,30 @@ export default function App() {
     });
   }, []);
 
+  // The generated factor is question.a; using max(a, b) misattributes practice
+  // whenever the random second factor happens to be larger.
+  const recordTableResult = useCallback((question: GameState['question'], wasCorrect: boolean, responseTime: number) => {
+    const tableKey = String(question.a);
+    updateSave(s => {
+      const prev = s.tableStats[tableKey] || { attempts: 0, correct: 0, totalResponseTime: 0, bestResponseTime: Number.MAX_SAFE_INTEGER, currentStreak: 0, bestStreak: 0 };
+      const currentStreak = wasCorrect ? prev.currentStreak + 1 : 0;
+      return {
+        ...s,
+        tableStats: {
+          ...s.tableStats,
+          [tableKey]: {
+            attempts: prev.attempts + 1,
+            correct: prev.correct + (wasCorrect ? 1 : 0),
+            totalResponseTime: prev.totalResponseTime + responseTime,
+            bestResponseTime: wasCorrect ? Math.min(prev.bestResponseTime, responseTime) : prev.bestResponseTime,
+            currentStreak,
+            bestStreak: Math.max(prev.bestStreak, currentStreak),
+          },
+        },
+      };
+    });
+  }, [updateSave]);
+
   useEffect(() => {
     if (game.screen !== 'playing' && game.screen !== 'boss') {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -189,7 +213,10 @@ export default function App() {
           const newLives = protected_ ? prev.lives : prev.lives - 1;
           engine.splashEffect();
           if (prev.soundOn) playWrongSound();
-          answerLockRef.current = false;
+          // A timeout is a failed attempt too: count it toward table practice and
+          // the no-mistake achievement, and keep the answer locked until advancing.
+          recordTableResult(prev.question, false, Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000));
+          setMistakesInSeason(m => m + 1);
 
           if (newLives <= 0) {
             setTimeout(() => {
@@ -227,7 +254,7 @@ export default function App() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
     // eslint-disable-next-line
-  }, [game.screen, game.timerRunning, game.paused, game.timeFrozen]);
+  }, [game.screen, game.timerRunning, game.paused, game.timeFrozen, recordTableResult]);
 
   useEffect(() => {
     if (!game.timeFrozen) return;
@@ -326,7 +353,7 @@ export default function App() {
         },
       }));
 
-      setQuestionStartTime(Date.now());
+      questionStartTimeRef.current = Date.now();
 
       return {
         ...prev,
@@ -361,7 +388,7 @@ export default function App() {
     answerLockRef.current = false;
 
     setMistakesInSeason(0);
-    setQuestionStartTime(Date.now());
+    questionStartTimeRef.current = Date.now();
 
     updateSave(s => ({ ...s, totalPlayed: s.totalPlayed + 1 }));
 
@@ -391,32 +418,10 @@ export default function App() {
     if (g.paused || !g.timerRunning || answerLockRef.current) return;
     answerLockRef.current = true;
 
-    const responseTime = (Date.now() - questionStartTime) / 1000;
-
-    const tableKey = String(Math.max(g.question.a, g.question.b));
-    const recordTableResult = (wasCorrect: boolean) => {
-      updateSave(s => {
-        const prev = s.tableStats[tableKey] || { attempts: 0, correct: 0, totalResponseTime: 0, bestResponseTime: Number.MAX_SAFE_INTEGER, currentStreak: 0, bestStreak: 0 };
-        const currentStreak = wasCorrect ? prev.currentStreak + 1 : 0;
-        return {
-          ...s,
-          tableStats: {
-            ...s.tableStats,
-            [tableKey]: {
-              attempts: prev.attempts + 1,
-              correct: prev.correct + (wasCorrect ? 1 : 0),
-              totalResponseTime: prev.totalResponseTime + responseTime,
-              bestResponseTime: wasCorrect ? Math.min(prev.bestResponseTime, responseTime) : prev.bestResponseTime,
-              currentStreak,
-              bestStreak: Math.max(prev.bestStreak, currentStreak),
-            },
-          },
-        };
-      });
-    };
+    const responseTime = Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000);
 
     if (ans === g.question.correct) {
-      recordTableResult(true);
+      recordTableResult(g.question, true, responseTime);
       const newCombo = g.combo + 1;
       const gained = 5 + g.timeLeft + Math.min(25, newCombo * 3);
       const coinsGained = 1 + Math.floor(newCombo / 3);
@@ -514,7 +519,7 @@ export default function App() {
           flashWhite: true,
         }));
         setTimeout(() => setGame(p => ({ ...p, flashWhite: false })), 250);
-        setQuestionStartTime(Date.now());
+        questionStartTimeRef.current = Date.now();
         answerLockRef.current = false;
         return;
       }
@@ -534,7 +539,7 @@ export default function App() {
       setTimeout(() => setGame(p => ({ ...p, flashWhite: false })), 250);
       setTimeout(() => advanceQuestion(), 1200);
     } else {
-      recordTableResult(false);
+      recordTableResult(g.question, false, responseTime);
       const protected_ = g.shieldActive;
       const newLives = protected_ ? g.lives : g.lives - 1;
       engine.splashEffect();
@@ -564,7 +569,7 @@ export default function App() {
       }
       setTimeout(() => advanceQuestion(), 1100);
     }
-  }, [engine, advanceQuestion, checkAchievement, updateSave, questionStartTime]);
+  }, [engine, advanceQuestion, checkAchievement, updateSave, recordTableResult]);
 
   const answerTrueFalse = useCallback((isTrue: boolean) => {
     const g = gameRef.current;
@@ -590,6 +595,7 @@ export default function App() {
 
     const protected_ = g.shieldActive;
     const newLives = protected_ ? g.lives : g.lives - 1;
+    recordTableResult(g.question, false, Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000));
     engine.splashEffect();
     setMistakesInSeason(m => m + 1);
 
@@ -610,7 +616,7 @@ export default function App() {
       return;
     }
     setTimeout(() => advanceQuestion(), 900);
-  }, [engine, advanceQuestion]);
+  }, [engine, advanceQuestion, recordTableResult]);
 
   const useHint = useCallback(() => {
     const g = gameRef.current;
@@ -637,6 +643,8 @@ export default function App() {
 
     const puIndex = g.powerUps.findIndex(p => p.type === type && p.count > 0);
     if (puIndex === -1) return;
+    // Do not charge a consumable when there is nothing to remove.
+    if (type === 'removeChoice' && (!g.question.choices || g.question.choices.length <= 2)) return;
 
     if (g.soundOn) playPowerUpSound();
 
