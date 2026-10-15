@@ -115,6 +115,12 @@ export default function App() {
   const [saveData, setSaveData] = useState<SaveData>(loadSave());
   const questionStartTimeRef = useRef(Date.now());
   const [mistakesInSeason, setMistakesInSeason] = useState(0);
+  const mistakesInSeasonRef = useRef(0);
+
+  const recordSeasonMistake = useCallback(() => {
+    mistakesInSeasonRef.current += 1;
+    setMistakesInSeason(mistakesInSeasonRef.current);
+  }, []);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const gameRef = useRef(game);
@@ -278,7 +284,7 @@ export default function App() {
           // A timeout is a failed attempt too: count it toward table practice and
           // the no-mistake achievement, and keep the answer locked until advancing.
           recordTableResult(prev.question, false, Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000));
-          setMistakesInSeason(m => m + 1);
+          recordSeasonMistake();
 
           if (newLives <= 0) {
             setTimeout(() => {
@@ -367,10 +373,11 @@ export default function App() {
         }
 
         if (prev.season < TOTAL_SEASONS) {
-          if (mistakesInSeason === 0) {
+          if (mistakesInSeasonRef.current === 0) {
             checkAchievement('no_mistake');
           }
-          setMistakesInSeason(0);
+          mistakesInSeasonRef.current = 0;
+    setMistakesInSeason(0);
 
           newSeason = prev.season + 1;
           newEpisode = 1;
@@ -438,7 +445,7 @@ export default function App() {
         feedbackColor: isNewSeason ? '#22c55e' : '#f8fafc',
       };
     });
-  }, [engine, checkAchievement, updateSave, mistakesInSeason]);
+  }, [engine, checkAchievement, updateSave]);
 
   const startGame = useCallback(() => {
     const tl = currentTimeLimit(1);
@@ -449,6 +456,7 @@ export default function App() {
     if (game.soundOn) playClickSound();
     answerLockRef.current = false;
 
+    mistakesInSeasonRef.current = 0;
     setMistakesInSeason(0);
     questionStartTimeRef.current = Date.now();
 
@@ -606,7 +614,7 @@ export default function App() {
       const newLives = protected_ ? g.lives : g.lives - 1;
       engine.splashEffect();
       if (g.soundOn) playWrongSound();
-      setMistakesInSeason(m => m + 1);
+      recordSeasonMistake();
 
       setGame(prev => ({
         ...prev,
@@ -659,7 +667,7 @@ export default function App() {
     const newLives = protected_ ? g.lives : g.lives - 1;
     recordTableResult(g.question, false, Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000));
     engine.splashEffect();
-    setMistakesInSeason(m => m + 1);
+    recordSeasonMistake();
 
     setGame(prev => ({
       ...prev,
