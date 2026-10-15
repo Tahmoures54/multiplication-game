@@ -62,8 +62,11 @@ public class BazaarBillingPlugin extends Plugin {
                 inventoryReady = true;
                 Purchase owned = inventory == null ? null : inventory.getPurchase(PRODUCT_ID);
                 boolean verified = owned != null && isVerifiedPurchase(owned);
-                if (verified) {
-                    preferences.edit().putBoolean(OWNED_KEY, true).apply();
+                if (inventory != null) {
+                    // A successful inventory query is the source of truth. Remove a
+                    // stale local entitlement if Bazaar confirms the non-consumable
+                    // purchase is no longer owned (for example, after a refund).
+                    preferences.edit().putBoolean(OWNED_KEY, verified).apply();
                 }
             }
         });
@@ -72,7 +75,13 @@ public class BazaarBillingPlugin extends Plugin {
     @PluginMethod
     public void getPurchaseStatus(PluginCall call) {
         JSObject result = new JSObject();
-        result.put("owned", preferences != null && preferences.getBoolean(OWNED_KEY, false));
+        boolean owned = preferences != null && preferences.getBoolean(OWNED_KEY, false);
+        if (inventoryReady && latestInventory != null) {
+            Purchase purchase = latestInventory.getPurchase(PRODUCT_ID);
+            owned = purchase != null && isVerifiedPurchase(purchase);
+            preferences.edit().putBoolean(OWNED_KEY, owned).apply();
+        }
+        result.put("owned", owned);
         call.resolve(result);
     }
 
@@ -96,15 +105,17 @@ public class BazaarBillingPlugin extends Plugin {
 
     @PluginMethod
     public void restorePurchases(PluginCall call) {
-        if (preferences.getBoolean(OWNED_KEY, false)) {
-            resolve(call, true);
+        if (inventoryReady && latestInventory != null) {
+            Purchase owned = latestInventory.getPurchase(PRODUCT_ID);
+            boolean verified = owned != null && isVerifiedPurchase(owned);
+            preferences.edit().putBoolean(OWNED_KEY, verified).apply();
+            resolve(call, verified);
             return;
         }
-        if (inventoryReady) {
-            Purchase owned = latestInventory == null ? null : latestInventory.getPurchase(PRODUCT_ID);
-            boolean verified = owned != null && isVerifiedPurchase(owned);
-            if (verified) preferences.edit().putBoolean(OWNED_KEY, true).apply();
-            resolve(call, verified);
+        // If Bazaar inventory is temporarily unavailable, keep a previously verified
+        // local entitlement so a paid offline game remains playable.
+        if (preferences.getBoolean(OWNED_KEY, false)) {
+            resolve(call, true);
             return;
         }
         call.reject("موجودی بازار هنوز آماده نیست. چند لحظه صبر کنید و دوباره بازیابی را بزنید.");
