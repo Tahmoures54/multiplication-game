@@ -256,8 +256,11 @@ export default function App() {
       // Claim the answer lock synchronously on the final second. This prevents a
       // tap and the timeout callback from both recording an outcome for one question.
       const current = gameRef.current;
+      // If an answer/skip already claimed this question, do not also process a timeout.
+      if (answerLockRef.current) return;
       if (current.timerRunning && !current.paused && !current.timeFrozen &&
-          current.timeLeft <= 1 && !answerLockRef.current) {
+          current.timeLeft <= 1) {
+        // Claim the timeout synchronously so a tap in the same event-loop turn cannot win too.
         answerLockRef.current = true;
       }
 
