@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - master
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       build_type:
@@ -25,8 +28,6 @@ jobs:
   build:
     name: Build Android
     runs-on: ubuntu-latest
-    env:
-      BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
 
     steps:
       - name: ⬇️ Checkout repository
@@ -109,11 +110,14 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: 🔨 Build Debug APK
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
+        if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug') }}
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
       - name: ℹ️ Check Bazaar billing configuration
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         run: |
           if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
             echo "::notice::BAZAAR_RSA_PUBLIC_KEY is not configured. A signed APK can still be built for initial app registration; configure the key before testing or releasing in-app billing."
@@ -121,6 +125,8 @@ jobs:
 
       - name: 🔨 Build Release APK
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        env:
+          BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
@@ -134,6 +140,8 @@ jobs:
 
       - name: 📦 Build Release AAB (Google Play)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'bundle' }}
+        env:
+          BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         working-directory: android
         run: ./gradlew bundleRelease --no-daemon
 
@@ -147,7 +155,7 @@ jobs:
           echo "AAB signature verified."
 
       - name: 📤 Upload Debug APK
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
+        if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug') }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Debug-APK
@@ -171,6 +179,9 @@ jobs:
           retention-days: 30
 
       - name: ℹ️ Build Info
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         run: |
           echo "✅ Build completed successfully!"
           if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
