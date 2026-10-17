@@ -9,6 +9,7 @@ import { bazaarBilling } from './services/bazaarBilling';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useViewport } from './hooks/useViewport';
 import { generateQuestion, generateBossQuestion } from './utils/questions';
+import { calculateStars, currentTimeLimit, getVisualSeason, maxFactorForSeason } from './features/gameplay/engine/rules';
 import { loadSave, saveSave, unlockAchievement } from './utils/storage';
 import {
   playCorrectSound, playWrongSound, playCatchSound, playClickSound,
@@ -25,36 +26,13 @@ import {
   OOPS_TEXTS,
   DEFAULT_POWERUPS,
 } from './constants';
-import type { GameState, VisualSeason, Achievement, SaveData, PowerUp } from './types';
+import type { GameState, Achievement, SaveData, PowerUp } from './types';
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function getVisualSeason(season: number): VisualSeason {
-  const mod = ((season - 1) % 4);
-  return (['spring', 'summer', 'autumn', 'winter'] as VisualSeason[])[mod];
-}
 
-function maxFactorForSeason(season: number): number {
-  if (season <= 2) return 5;
-  if (season <= 4) return 7;
-  if (season <= 6) return 9;
-  if (season <= 8) return 10;
-  return 12;
-}
-
-function currentTimeLimit(season: number): number {
-  return Math.max(8, BASE_TIME_LIMIT - Math.floor(season / 2));
-}
-
-function calculateStars(timeLeft: number, timeLimit: number, lives: number, combo: number): number {
-  const timeRatio = timeLeft / timeLimit;
-  let stars = 1;
-  if (timeRatio > 0.5 && lives >= 3) stars = 2;
-  if (timeRatio > 0.7 && lives >= 4 && combo >= 2) stars = 3;
-  return stars;
-}
 
 function getAnswerExplanation(question: GameState['question']): string {
   if (question.type === 'chain') {
