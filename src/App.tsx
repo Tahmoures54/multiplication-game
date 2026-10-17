@@ -9,7 +9,7 @@ import { bazaarBilling } from './services/bazaarBilling';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useViewport } from './hooks/useViewport';
 import { generateQuestion, generateBossQuestion } from './utils/questions';
-import { calculateStars, currentTimeLimit, getVisualSeason, maxFactorForSeason } from './features/gameplay/engine/rules';
+import { calculateAnswerReward, calculateStars, currentTimeLimit, getVisualSeason, isAnswerCorrect, maxFactorForSeason } from './features/gameplay/engine/rules';
 import { loadSave, saveSave, unlockAchievement } from './utils/storage';
 import {
   playCorrectSound, playWrongSound, playCatchSound, playClickSound,
@@ -479,11 +479,9 @@ export default function App() {
 
     const responseTime = Math.max(0, (Date.now() - questionStartTimeRef.current) / 1000);
 
-    if (ans === g.question.correct) {
+    if (isAnswerCorrect(ans, g.question.correct)) {
       recordTableResult(g.question, true, responseTime);
-      const newCombo = g.combo + 1;
-      const gained = 5 + g.timeLeft + Math.min(25, newCombo * 3);
-      const coinsGained = 1 + Math.floor(newCombo / 3);
+      const { newCombo, gained, coinsGained } = calculateAnswerReward(g.timeLeft, g.combo);
 
       engine.confettiBurst();
       if (g.soundOn) {
