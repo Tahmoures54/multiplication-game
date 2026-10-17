@@ -324,7 +324,7 @@ export default function App() {
             shieldActive: false,
             feedbackText: protected_
               ? `🛡️ محافظ نجاتت داد! ${getAnswerExplanation(prev.question)}`
-              : `وقت تموم شد! جواب: ${prev.question.correct} ⏰`,
+              : `وقت تموم شد. ${getAnswerExplanation(prev.question)} ⏰`,
             feedbackColor: protected_ ? '#60a5fa' : '#ef4444',
           };
         }
