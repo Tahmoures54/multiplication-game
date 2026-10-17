@@ -226,27 +226,32 @@ export default function App() {
     });
   }, []);
 
-  // The generated factor is question.a; using max(a, b) misattributes practice
-  // whenever the random second factor happens to be larger.
+  // Track both factors: a table should receive practice credit whether it
+  // appears on the left or right side. Deduplicate equal factors (e.g. 4 × 4).
   const recordTableResult = useCallback((question: GameState['question'], wasCorrect: boolean, responseTime: number) => {
-    const tableKey = String(question.a);
+    const tableKeys = Array.from(new Set([question.a, question.b])).map(String);
     updateSave(s => {
-      const prev = s.tableStats[tableKey] || { attempts: 0, correct: 0, totalResponseTime: 0, bestResponseTime: Number.MAX_SAFE_INTEGER, currentStreak: 0, bestStreak: 0 };
-      const currentStreak = wasCorrect ? prev.currentStreak + 1 : 0;
-      return {
-        ...s,
-        tableStats: {
-          ...s.tableStats,
-          [tableKey]: {
-            attempts: prev.attempts + 1,
-            correct: prev.correct + (wasCorrect ? 1 : 0),
-            totalResponseTime: prev.totalResponseTime + responseTime,
-            bestResponseTime: wasCorrect ? Math.min(prev.bestResponseTime, responseTime) : prev.bestResponseTime,
-            currentStreak,
-            bestStreak: Math.max(prev.bestStreak, currentStreak),
-          },
-        },
-      };
+      const tableStats = { ...s.tableStats };
+      for (const tableKey of tableKeys) {
+        const prev = tableStats[tableKey] || {
+          attempts: 0,
+          correct: 0,
+          totalResponseTime: 0,
+          bestResponseTime: Number.MAX_SAFE_INTEGER,
+          currentStreak: 0,
+          bestStreak: 0,
+        };
+        const currentStreak = wasCorrect ? prev.currentStreak + 1 : 0;
+        tableStats[tableKey] = {
+          attempts: prev.attempts + 1,
+          correct: prev.correct + (wasCorrect ? 1 : 0),
+          totalResponseTime: prev.totalResponseTime + responseTime,
+          bestResponseTime: wasCorrect ? Math.min(prev.bestResponseTime, responseTime) : prev.bestResponseTime,
+          currentStreak,
+          bestStreak: Math.max(prev.bestStreak, currentStreak),
+        };
+      }
+      return { ...s, tableStats };
     });
   }, [updateSave]);
 
