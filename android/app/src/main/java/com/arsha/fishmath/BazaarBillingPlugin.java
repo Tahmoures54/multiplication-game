@@ -22,15 +22,13 @@ public class BazaarBillingPlugin extends Plugin {
     private static final String PRODUCT_ID = "fishmath_full_unlock";
     private static final String PREFS = "fishmath_bazaar_entitlement";
     private static final String OWNED_KEY = "full_unlock_owned";
-    private static final long INVENTORY_TIMEOUT_MS = 12000L;
+    private static final long INVENTORY_TIMEOUT_MS = 8000L;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private BillingClient billingClient;
     private SharedPreferences preferences;
     private PluginCall pendingPurchase;
     private PluginCall pendingInventoryCall;
-    private Inventory latestInventory;
-    private boolean inventoryReady = false;
     private Runnable inventoryTimeout;
 
     @Override
@@ -74,8 +72,6 @@ public class BazaarBillingPlugin extends Plugin {
 
             @Override
             public void onQueryInventoryFinished(Inventory inventory) {
-                latestInventory = inventory;
-                inventoryReady = inventory != null;
                 if (inventory == null) {
                     rejectPendingInventory("پاسخ موجودی کافه‌بازار معتبر نبود. دوباره تلاش کنید.");
                     return;
@@ -104,8 +100,8 @@ public class BazaarBillingPlugin extends Plugin {
 
     /**
      * Recreates the billing connection so the SDK performs a fresh inventory
-     * query. This is used for purchase recovery and restore; the local cache is
-     * only a fallback when Bazaar cannot be reached.
+     * query. Used for purchase recovery and restore; the local cache is only a
+     * fallback when Bazaar cannot be reached.
      */
     @PluginMethod
     public void refreshPurchaseStatus(PluginCall call) {
@@ -119,8 +115,6 @@ public class BazaarBillingPlugin extends Plugin {
         }
 
         pendingInventoryCall = call;
-        inventoryReady = false;
-        latestInventory = null;
         if (inventoryTimeout != null) mainHandler.removeCallbacks(inventoryTimeout);
         inventoryTimeout = () -> rejectPendingInventory(
             "پاسخ کافه‌بازار دریافت نشد. اتصال اینترنت و نصب بودن کافه‌بازار را بررسی کنید و دوباره تلاش کنید."
