@@ -1,138 +1,85 @@
-# 🚀 راهنمای انتشار در گوگل‌پلی
+# راهنمای انتشار در کافه‌بازار
 
-## مشخصات برنامه
-| مورد | مقدار |
-|------|--------|
-| نام | ماهیگیری جدول ضرب |
-| Package ID | `com.arsha.fishmath` |
-| نسخه | `1.2.1` (versionCode = 4) |
-| حداقل اندروید | 5.1 (API 22) |
-| هدف | API 36 |
-| دسته پیشنهادی | آموزش / بازی آموزشی کودکان |
+## مشخصات نسخه فعلی
 
----
+- نام برنامه: ماهیگیری جدول ضرب
+- شناسه بسته: `com.arsha.fishmath`
+- نسخه: `1.2.1`
+- `versionCode`: `4`
+- حداقل اندروید: API 22
+- هدف ساخت: API 36
+- خروجی موردنیاز: APK امضاشده
 
-## ۱. کلید امضای انتشار (یک‌بار برای همیشه)
+## ۱. بررسی پیش از انتشار
 
-برای این مخزن، کلید انتشار از طریق GitHub Actions Secrets تنظیم شده است. فایل keystore و نسخه پشتیبان آن را خصوصی نگه دارید و برای به‌روزرسانی‌های بعدی از همان کلید استفاده کنید. در CI، فایل کلید به‌صورت موقت ساخته می‌شود و وارد مخزن نمی‌شود.
-
-برای انتشار در **کافه‌بازار** از `Run workflow` گزینه `release` را انتخاب کنید؛ فایل خروجی `FishMath-Release-APK` است. گزینه `bundle` برای ساخت AAB است و برای کافه‌بازار فقط در صورتی استفاده شود که پنل انتشار شما آن را بپذیرد.
-
-## ۱. ساخت Keystore محلی (اختیاری)
+از ریشه پروژه اجرا کنید:
 
 ```bash
-keytool -genkey -v -keystore fishmath-release.keystore -alias fishmath -keyalg RSA -keysize 2048 -validity 10000
+npm ci
+npm run verify
 ```
 
-سپس فایل `android/keystore.properties` بسازید:
-
-```properties
-storeFile=../../fishmath-release.keystore
-storePassword=رمز_شما
-keyAlias=fishmath
-keyPassword=رمز_شما
-```
-
-⚠️ این فایل و keystore را **هرگز** در گیت commit نکنید.
-
----
-
-## ۲. بیلد برای گوگل‌پلی (AAB)
+برای ساخت محلی Debug:
 
 ```bash
-npm install
-npm run build
-npx cap sync android
-cd android
-./gradlew bundleRelease
+npm run android:debug
 ```
 
-فایل خروجی:
-`android/app/build/outputs/bundle/release/app-release.aab`
+برای انتشار، از GitHub به مسیر **Actions → Build Android APK / AAB → Run workflow** بروید و `release` را انتخاب کنید. پس از موفقیت کامل workflow، artifact با نام `FishMath-Release-APK` را دانلود کنید. برای کافه‌بازار، فایل APK امضاشده را انتخاب کنید؛ AAB فقط در صورت پذیرش پنل بازار استفاده شود.
 
-یا از GitHub Actions:
-- Actions → Build Android → Run workflow → انتخاب `bundle`
+## ۲. تنظیم اسرار GitHub Actions
 
----
+در **Settings → Secrets and variables → Actions** این موارد باید تنظیم شده باشند:
 
-## ۳. متن‌های فروشگاه (کپی کنید)
+- `RELEASE_KEYSTORE_BASE64`
+- `RELEASE_KEYSTORE_PASSWORD`
+- `RELEASE_KEY_ALIAS`
+- `RELEASE_KEY_PASSWORD`
+- `BAZAAR_RSA_PUBLIC_KEY`
 
-### عنوان کوتاه (حداکثر ۳۰ کاراکتر)
-```
-ماهیگیری جدول ضرب
-```
+کلید عمومی RSA باید از پنل توسعه‌دهندگان کافه‌بازار و برای همین برنامه گرفته شود. فایل keystore و رمزهای آن را در مخزن، کد منبع، issue یا لاگ قرار ندهید. برای نسخه‌های بعدی، همان کلید امضای قبلی را نگه دارید؛ تغییر کلید می‌تواند به‌روزرسانی نصب‌های موجود را مختل کند.
 
-### توضیح کوتاه (حداکثر ۸۰ کاراکتر)
-```
-بازی آموزشی ضرب با تم ماهیگیری — مخصوص کودکان
-```
+## ۳. خرید درون‌برنامه‌ای
 
-### توضیح کامل
-```
-🎣 بازی ماهیگیری جدول ضرب
+شناسه محصول دائمی: `fishmath_full_unlock`
 
-یک بازی آموزشی سرگرم‌کننده برای کودکان که تمرین جدول ضرب را به ماجراجویی ماهیگیری تبدیل می‌کند!
+فصل‌های ۱ تا ۴ رایگان‌اند و خرید یک‌باره فصل‌های ۵ تا ۱۰ را باز می‌کند. تنظیم کامل محصول و رفتار بازیابی خرید در [راهنمای پرداخت بازار](BAZAAR_BILLING_SETUP.md) آمده است.
 
-✨ ویژگی‌ها:
-• تجربه تمام‌صفحه با دنیای دریایی زنده
-• پاسخ فقط با انتخاب گزینه — بدون تایپ و بدون کیپد
-• ۱۰ فصل با سختی پیشرونده
-• فصل‌های بصری بهار، تابستان، پاییز و زمستان
-• کوسه‌خالخالی بامزه و سیستم باس
-• قدرت‌های ویژه، دستاوردها و آکواریوم شخصی
-• موسیقی ملایم پس‌زمینه
-• انتخاب تطبیقی سؤال‌ها بر اساس نقاط ضعف
-• صفحه پیشرفت یادگیری برای جدول‌های ×1 تا ×12
-• کاملاً آفلاین و بدون تبلیغات
+## ۴. آزمون الزامی روی گوشی واقعی
 
-مناسب برای کودکان ۷ تا ۱۲ سال.
-پشتیبانی واتساپ: +989160684552
-```
+پیش از بارگذاری، APK امضاشده را روی دستگاه Android نصب کنید و این موارد را بررسی کنید:
 
-### کلمات کلیدی پیشنهادی
-```
-جدول ضرب، ریاضی کودکان، بازی آموزشی، ماهیگیری، یادگیری ضرب
-```
+- برنامه نصب و بدون صفحه خطا اجرا می‌شود.
+- شروع بازی، انتخاب جواب، توقف و ادامه بازی کار می‌کنند.
+- پیشرفت پس از بستن و بازکردن برنامه باقی می‌ماند.
+- بازی بدون اینترنت قابل اجراست.
+- پیوند پشتیبانی واتساپ باز می‌شود.
+- خرید آزمایشی و بازیابی خرید از پنل بازار، با حساب و محیط مجاز آزمایش می‌شوند.
+- شناسه بسته، نسخه و امضای APK با نسخه منتشرشده قبلی سازگارند.
 
----
+موفقیت CI به‌تنهایی جایگزین آزمون روی گوشی واقعی و تأیید پرداخت بازار نیست.
 
-## ۴. تصاویر مورد نیاز گوگل‌پلی
+## ۵. متن پیشنهادی صفحه بازار
 
-| نوع | اندازه |
-|-----|--------|
-| آیکون برنامه | 512×512 PNG |
-| تصویر ویژه (Feature Graphic) | 1024×500 |
-| اسکرین‌شات موبایل | حداقل ۲ عدد (۱۶:۹ یا ۹:۱۶) |
-| اسکرین‌شات تبلت (اختیاری) | ۷ یا ۱۰ اینچ |
+**عنوان:** ماهیگیری جدول ضرب
 
----
+**توضیح کوتاه:** جدول ضرب را با یک ماجراجویی دریایی و انتخاب پاسخ یاد بگیر!
 
-## ۵. رتبه‌بندی محتوا
-- مخاطب: Everyone / مناسب کودکان
-- بدون خشونت واقعی، بدون خرید درون‌برنامه‌ای اجباری، بدون تبلیغات شخص ثالث
+**توضیح کامل:**
 
-## ۶. حریم خصوصی
-متن کامل در فایل `PRIVACY_POLICY.md` است.  
-لینک آن را در کنسول گوگل‌پلی قرار دهید (مثلاً روی گیت‌هاب یا سایت خودتان).
+بازی ماهیگیری جدول ضرب، تمرین ریاضی را به ماجراجویی زیر آب تبدیل می‌کند. کودک با لمس گزینه‌ها پاسخ می‌دهد و نیازی به تایپ عدد ندارد.
 
+- ۱۰ فصل با سختی تدریجی
+- تمرین تطبیقی برای جدول‌های نیازمند تمرین بیشتر
+- مشاهده پیشرفت جدول‌های ضرب ۱ تا ۱۲
+- فضای دریایی، ماهی‌ها، دستاوردها و آکواریوم
+- ذخیره محلی پیشرفت و امکان بازی آفلاین
+- چهار فصل رایگان و بازکردن دائمی فصل‌های بیشتر از طریق خرید درون‌برنامه‌ای
 
-## Fish Math 1.2.1 Release Notes
+**کلمات کلیدی:** جدول ضرب، ریاضی کودکان، بازی آموزشی، ماهیگیری، آموزش ضرب
 
-- Full-screen ocean world; HUD and answers overlay the live canvas.
-- Children now always answer by tapping a choice. Numeric typing and the keypad are gone.
-- Developer/contact details were removed. Support is WhatsApp +989160684552.
-- Pause is a full-screen overlay. Duplicate progress button on the start screen is gone.
-- Release workflow hardened to validate the signing keystore and verify signed APK/AAB outputs.
-- Android versionCode: 4; versionName: 1.2.1.
+## ۶. تصاویر و حریم خصوصی
 
-## Fish Math 1.1.0 Release Notes
+تصاویر، آیکون و اسکرین‌شات‌ها را طبق اندازه‌ها و قالب‌های نمایش‌داده‌شده در پنل کافه‌بازار آماده کنید؛ الزامات فروشگاه ممکن است تغییر کند.
 
-- Adaptive question selection now prioritizes weaker multiplication tables.
-- Added learning progress view for tables ×1 through ×12.
-- Added save schema versioning and migration-safe defaults.
-- Hardened achievement and power-up persistence.
-- Fixed chain-question display so the intermediate result and final answer are unambiguous.
-- Android build target updated to API 36 for the August 31, 2026 Google Play requirement.
-- Android versionCode: 2; versionName: 1.1.0.
-
-Before upload to Cafe Bazaar, install and test the signed `FishMath-Release-APK` on a physical Android device, and verify package name, version, signature, offline operation, and WhatsApp support behavior. Google Play currently requires new apps and updates to target Android 16 (API 36) or higher starting August 31, 2026.
+سیاست حریم خصوصی برنامه در [PRIVACY_POLICY.md](PRIVACY_POLICY.md) قرار دارد. پیش از انتشار، مطمئن شوید متن آن با رفتار واقعی نسخه نهایی، به‌ویژه پرداخت و لینک‌های خارجی، سازگار است.
