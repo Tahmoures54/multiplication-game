@@ -113,31 +113,19 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: 🔐 Check whether a Bazaar-enabled release can be built
-        id: release_gate
-        run: |
-          if [ -n "$BAZAAR_RSA_PUBLIC_KEY" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Bazaar RSA secret is missing; only the debug APK will be built on this push."
-          fi
-
-      - name: 🔎 Validate Bazaar key for requested release
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
+      - name: ℹ️ Check Bazaar billing configuration
         run: |
           if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
-            echo "::error::Set the BAZAAR_RSA_PUBLIC_KEY repository secret before building a release APK."
-            exit 1
+            echo "::notice::BAZAAR_RSA_PUBLIC_KEY is not configured. A signed APK can still be built for initial app registration; configure the key before testing or releasing in-app billing."
           fi
 
       - name: 🔨 Build Release APK
-        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
       - name: 🧪 Verify Release APK signature
-        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -167,7 +155,7 @@ jobs:
           retention-days: 30
 
       - name: 📤 Upload Release APK
-        if: ${{ (github.event_name == 'push' && steps.release_gate.outputs.enabled == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Release-APK
@@ -186,6 +174,6 @@ jobs:
         run: |
           echo "✅ Build completed successfully!"
           if [ -z "$BAZAAR_RSA_PUBLIC_KEY" ]; then
-            echo "::warning::Release APK was skipped because BAZAAR_RSA_PUBLIC_KEY is not configured. Do not publish an APK built without the Bazaar public key."
+            echo "::notice::This signed release APK was built without Bazaar billing verification configured. It can be used for initial app registration; configure BAZAAR_RSA_PUBLIC_KEY before testing or enabling in-app purchases."
           fi
           find android/app/build/outputs -name "*.apk" -o -name "*.aab" 2>/dev/null | while read f; do ls -lh "$f"; done
