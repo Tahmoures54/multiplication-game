@@ -36,3 +36,24 @@ export function calculateStars(
   if (timeRatio > 0.7 && lives >= 4 && combo >= 2) stars = 3;
   return stars;
 }
+
+/** Checks an answer using the same numeric comparison used by the game UI. */
+export function isAnswerCorrect(answer: number, correctAnswer: number): boolean {
+  return answer === correctAnswer;
+}
+
+export interface AnswerReward {
+  newCombo: number;
+  gained: number;
+  coinsGained: number;
+}
+
+/** Calculates score and coins for a correct answer without mutating game state. */
+export function calculateAnswerReward(timeLeft: number, currentCombo: number): AnswerReward {
+  const newCombo = currentCombo + 1;
+  return {
+    newCombo,
+    gained: 5 + timeLeft + Math.min(25, newCombo * 3),
+    coinsGained: 1 + Math.floor(newCombo / 3),
+  };
+}
