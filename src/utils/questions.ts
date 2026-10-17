@@ -1,5 +1,3 @@
-// ===== سیستم تولید سوالات متنوع =====
-
 import type { Question, QuestionType, TableStat } from '../types';
 
 function randomInt(min: number, max: number) {
@@ -15,24 +13,64 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/**
+ * Choose a factor using a smoothed estimate of learning difficulty.
+ * A small prior prevents one early mistake from dominating the whole game,
+ * while unanswered tables remain more likely than well-practiced tables.
+ */
+function chooseAdaptiveFactor(
+  candidates: number[],
+  tableStats?: Record<string, TableStat>,
+  avoidFactor?: number
+): number {
+  const weighted = candidates.map(factor => {
+    const stat = tableStats?.[String(factor)];
+    const attempts = Math.max(0, stat?.attempts ?? 0);
+    const correct = Math.min(attempts, Math.max(0, stat?.correct ?? 0));
+
+    let weight: number;
+    if (attempts === 0) {
+      weight = 3;
+    } else {
+      // Laplace smoothing: start with two virtual correct and two incorrect
+      // answers so a tiny sample does not create an extreme probability.
+      const accuracy = (correct + 2) / (attempts + 4);
+      const weakness = 1 - accuracy;
+      const streakNeed = (stat?.currentStreak ?? 0) < 3 ? 1 : 0.25;
+      weight = 1 + weakness * 6 + streakNeed;
+    }
+
+    // Avoid making the same square fact too frequent, without removing it:
+    // square facts are still useful and must remain possible.
+    if (factor === avoidFactor && candidates.length > 1) weight *= 0.45;
+    return { factor, weight };
+  });
+
+  const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+  let cursor = Math.random() * totalWeight;
+  for (const item of weighted) {
+    cursor -= item.weight;
+    if (cursor <= 0) return item.factor;
+  }
+  return candidates[candidates.length - 1];
+}
+
 // تولید گزینه‌های اشتباه نزدیک به جواب درست
 function generateWrongChoices(correct: number, count: number): number[] {
   const choices = new Set<number>();
-  // گزینه‌های نزدیک
   const offsets = [-2, -1, 1, 2, -3, 3, -5, 5, -10, 10];
   for (const off of shuffle(offsets)) {
     const val = correct + off;
-    if (val > 0 && val !== correct) {
-      choices.add(val);
-    }
+    if (val > 0 && val !== correct) choices.add(val);
     if (choices.size >= count) break;
   }
-  // اگر کم بود، اعداد تصادفی اضافه کن
-  while (choices.size < count) {
-    const val = randomInt(Math.max(1, correct - 15), correct + 15);
-    if (val > 0 && val !== correct) {
-      choices.add(val);
-    }
+
+  // A bounded fallback avoids an accidental infinite loop if this helper is
+  // ever used with unusual inputs.
+  const lower = Math.max(1, Math.floor(correct) - 15);
+  const upper = Math.max(lower + count + 1, Math.floor(correct) + 15);
+  for (let value = lower; choices.size < count && value <= upper; value++) {
+    if (value !== correct) choices.add(value);
   }
   return Array.from(choices).slice(0, count);
 }
@@ -44,28 +82,11 @@ export function generateQuestion(
   forceType?: QuestionType,
   tableStats?: Record<string, TableStat>
 ): Question {
-  // Sample both factors adaptively so weak tables are practiced regardless
-  // of whether they appear on the left or right side of the multiplication.
-  const candidates = Array.from({ length: maxFactor - minFactor + 1 }, (_, i) => minFactor + i);
-  const chooseFactor = (): number => {
-    const weighted = candidates.map(factor => {
-      const stat = tableStats?.[String(factor)];
-      if (!stat || stat.attempts === 0) return { factor, weight: 3 };
-      const accuracy = stat.correct / stat.attempts;
-      const weakness = 1 - accuracy;
-      const recencyNeed = stat.currentStreak < 3 ? 1 : 0.25;
-      return { factor, weight: 1 + weakness * 6 + recencyNeed };
-    });
-    const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
-    let cursor = Math.random() * totalWeight;
-    for (const item of weighted) {
-      cursor -= item.weight;
-      if (cursor <= 0) return item.factor;
-    }
-    return candidates[candidates.length - 1];
-  };
-  const a = chooseFactor();
-  const b = chooseFactor();
+  const safeMin = Math.max(1, Math.min(12, Math.floor(minFactor) || 1));
+  const safeMax = Math.max(safeMin, Math.min(12, Math.floor(maxFactor) || safeMin));
+  const candidates = Array.from({ length: safeMax - safeMin + 1 }, (_, i) => safeMin + i);
+  const a = chooseAdaptiveFactor(candidates, tableStats);
+  const b = chooseAdaptiveFactor(candidates, tableStats, a);
   const correct = a * b;
 
   // تعیین نوع سوال بر اساس فصل یا اجبار
@@ -156,10 +177,14 @@ function withChoices(question: Question): Question {
   return { ...question, choices: shuffle([question.correct, ...wrong]) };
 }
 
-export function generateBossQuestion(season: number): Question {
-  const maxF = Math.min(12, 5 + season);
-  const a = randomInt(3, maxF);
-  const b = randomInt(3, maxF);
+export function generateBossQuestion(
+  season: number,
+  tableStats?: Record<string, TableStat>
+): Question {
+  const maxF = Math.max(3, Math.min(12, 5 + Math.floor(season)));
+  const candidates = Array.from({ length: maxF - 2 }, (_, i) => i + 3);
+  const a = chooseAdaptiveFactor(candidates, tableStats);
+  const b = chooseAdaptiveFactor(candidates, tableStats, a);
   const correct = a * b;
   return withChoices({
     type: 'normal',
