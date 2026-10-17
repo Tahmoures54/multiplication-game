@@ -10,8 +10,8 @@ interface BazaarBillingPlugin {
 const BazaarBilling = registerPlugin<BazaarBillingPlugin>('BazaarBilling');
 
 export const FULL_UNLOCK_PRODUCT_ID = 'fishmath_full_unlock';
-const RECOVERY_ATTEMPTS = 3;
-const RECOVERY_DELAY_MS = 900;
+const RECOVERY_ATTEMPTS = 2;
+const RECOVERY_DELAY_MS = 700;
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -41,9 +41,8 @@ export const bazaarBilling = {
   isNative: () => Capacitor.isNativePlatform(),
 
   /**
-   * On startup, prefer a fresh verified Bazaar inventory. If Bazaar is
-   * temporarily unavailable, keep a previously verified local unlock so the
-   * paid game remains usable offline.
+   * Startup uses one fresh inventory query, then falls back to a previously
+   * verified local entitlement if Bazaar is temporarily unavailable.
    */
   async status(): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) return false;
@@ -56,7 +55,8 @@ export const bazaarBilling = {
     }
 
     try {
-      return await refreshWithRetries();
+      const result = await BazaarBilling.refreshPurchaseStatus();
+      return result.owned === true;
     } catch {
       return cached;
     }
