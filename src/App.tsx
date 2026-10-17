@@ -56,6 +56,16 @@ function calculateStars(timeLeft: number, timeLimit: number, lives: number, comb
   return stars;
 }
 
+function getAnswerExplanation(question: GameState['question']): string {
+  if (question.type === 'chain') {
+    return `جواب این مرحله ${question.correct} بود. اول ضرب اول را حساب کن، بعد حاصل را در عدد بعدی ضرب کن.`;
+  }
+  if (question.type === 'missing') {
+    return `عدد جای خالی ${question.correct} است؛ چون ${question.a} × ${question.b} = ${question.a * question.b}.`;
+  }
+  return `حاصل درست ${question.a} × ${question.b} برابر ${question.a * question.b} است.`;
+}
+
 function createInitialState(): GameState {
   const q = generateQuestion(1, 5);
   return {
@@ -300,7 +310,7 @@ export default function App() {
               combo: 0,
               lives: 0,
               shieldActive: false,
-              feedbackText: `وقت تموم شد! جواب: ${prev.question.correct} ⏰`,
+              feedbackText: `وقت تموم شد. ${getAnswerExplanation(prev.question)} ⏰`,
               feedbackColor: '#ef4444',
             };
           }
@@ -313,7 +323,7 @@ export default function App() {
             lives: newLives,
             shieldActive: false,
             feedbackText: protected_
-              ? `🛡️ محافظ نجاتت داد! جواب: ${prev.question.correct}`
+              ? `🛡️ محافظ نجاتت داد! ${getAnswerExplanation(prev.question)}`
               : `وقت تموم شد! جواب: ${prev.question.correct} ⏰`,
             feedbackColor: protected_ ? '#60a5fa' : '#ef4444',
           };
@@ -624,8 +634,8 @@ export default function App() {
         lives: newLives,
         shieldActive: false,
         feedbackText: protected_
-          ? `🛡️ محافظ نجاتت داد! جواب: ${prev.question.correct}`
-          : `${pick(OOPS_TEXTS)} جواب: ${prev.question.correct}`,
+          ? `🛡️ محافظ نجاتت داد! ${getAnswerExplanation(prev.question)}`
+          : `${pick(OOPS_TEXTS)} ${getAnswerExplanation(prev.question)}`,
         feedbackColor: protected_ ? '#60a5fa' : '#ef4444',
         shaking: true,
       }));
