@@ -14,7 +14,8 @@
     "android:release": "npm run verify && npm run cap:build && cd android && ./gradlew assembleRelease",
     "android:bundle": "npm run verify && npm run cap:build && cd android && ./gradlew bundleRelease",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run typecheck && npm run build"
+    "verify": "npm run typecheck && npm test && npm run build",
+    "test": "node --test src/tests/unit/*.test.ts"
   },
   "dependencies": {
     "@capacitor/android": "6.2.0",
