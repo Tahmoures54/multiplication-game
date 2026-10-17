@@ -109,7 +109,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: 🔨 Build Debug APK
-        if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'debug' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
@@ -159,7 +159,7 @@ jobs:
           echo "AAB signature verified."
 
       - name: 📤 Upload Debug APK
-        if: ${{ github.event.inputs.build_type != 'release' && github.event.inputs.build_type != 'bundle' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
         uses: actions/upload-artifact@v4
         with:
           name: FishMath-Debug-APK
