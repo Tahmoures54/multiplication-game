@@ -358,7 +358,7 @@ export default function App() {
         if (!prev.isBoss && prev.episode === EPISODES_PER_SEASON) {
           const bossHP = 3 + Math.floor(prev.season / 2);
           if (prev.soundOn) playBossSound();
-          const bq = generateBossQuestion(prev.season);
+          const bq = generateBossQuestion(prev.season, saveRef.current.tableStats);
           return {
             ...prev,
             isBoss: true,
@@ -573,7 +573,7 @@ export default function App() {
           return;
         }
 
-        const bq = generateBossQuestion(g.season);
+        const bq = generateBossQuestion(g.season, saveRef.current.tableStats);
         setGame(prev => ({
           ...prev,
           bossHP: newBossHP,
