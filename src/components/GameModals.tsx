@@ -104,32 +104,75 @@ export function GameModals({
 
       {showProgress && (
         <ModalShell onClose={onCloseProgress}>
-          <h2 className="text-xl font-bold text-white mb-1 text-center">📊 پیشرفت یادگیری</h2>
-          <p className="text-cyan-300 text-xs text-center mb-4">هر جدول را که بیشتر تمرین کنی، قوی‌تر می‌شی.</p>
-          <div className="space-y-2">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(table => {
+          {(() => {
+            const tables = Array.from({ length: 12 }, (_, i) => i + 1).map(table => {
               const stat = saveData.tableStats[String(table)];
-              const accuracy = stat?.attempts ? Math.round((stat.correct / stat.attempts) * 100) : 0;
-              const practice = stat?.attempts || 0;
-              return (
-                <div key={table} className="bg-slate-800/90 rounded-xl p-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-white font-bold">جدول ×{table}</span>
-                    <span className="text-cyan-300 font-bold">{practice ? `${accuracy}%` : 'شروع نشده'}</span>
-                  </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-cyan-400 to-green-400" style={{ width: `${accuracy}%` }} />
-                  </div>
-                  <div className="text-[11px] text-slate-400 mt-1">
-                    {practice ? `${practice} تمرین • ${stat?.currentStreak || 0} پاسخ درست پیاپی` : 'با بازی کردن این جدول را تمرین کن.'}
+              const attempts = stat?.attempts || 0;
+              return {
+                table,
+                stat,
+                attempts,
+                accuracy: attempts ? Math.round((stat!.correct / attempts) * 100) : null,
+              };
+            });
+            const practiced = tables.filter(item => item.attempts > 0);
+            const recommendation = practiced.length
+              ? [...practiced].sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0))[0]
+              : tables[0];
+            return (
+              <>
+                <h2 className="text-xl font-bold text-white mb-1 text-center">📊 پیشرفت یادگیری</h2>
+                <p className="text-cyan-300 text-xs text-center mb-4">هر جدول را که بیشتر تمرین کنی، قوی‌تر می‌شی.</p>
+                <div className="bg-cyan-950/70 border border-cyan-400/30 rounded-2xl p-3 mb-4">
+                  <div className="text-cyan-200 text-xs mb-1">🎯 پیشنهاد تمرین بعدی</div>
+                  <div className="text-white font-bold">جدول ×{recommendation.table}</div>
+                  <div className="text-cyan-100 text-xs mt-1">
+                    {recommendation.attempts
+                      ? `دقت فعلی ${recommendation.accuracy}% است؛ چند دور دیگر تمرین کن.`
+                      : 'از این جدول شروع کن و با هر پاسخ درست، پیشرفتت را ببین.'}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <button className="mt-4 w-full py-3 bg-cyan-600 text-white rounded-2xl font-bold" onClick={onCloseProgress}>
-            بستن
-          </button>
+                <div className="space-y-2">
+                  {tables.map(({ table, stat, attempts, accuracy }) => {
+                    const mastery = accuracy === null
+                      ? { label: 'شروع نشده', color: 'text-slate-400' }
+                      : attempts >= 10 && accuracy >= 90
+                        ? { label: 'مسلط شدی! 🌟', color: 'text-green-300' }
+                        : accuracy >= 70
+                          ? { label: 'در حال یادگیری', color: 'text-cyan-300' }
+                          : { label: 'نیاز به تمرین', color: 'text-amber-300' };
+                    const averageTime = attempts && stat
+                      ? Math.round((stat.totalResponseTime / attempts) * 10) / 10
+                      : null;
+                    return (
+                      <div key={table} className="bg-slate-800/90 rounded-xl p-3">
+                        <div className="flex justify-between items-center mb-1 gap-2">
+                          <span className="text-white font-bold">جدول ×{table}</span>
+                          <span className={`font-bold text-xs ${mastery.color}`}>
+                            {accuracy === null ? mastery.label : `${accuracy}% • ${mastery.label}`}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${accuracy !== null && accuracy >= 90 ? 'bg-gradient-to-r from-cyan-400 to-green-400' : 'bg-cyan-400'}`}
+                            style={{ width: `${accuracy ?? 0}%` }}
+                          />
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-1">
+                          {attempts
+                            ? `${attempts} بار تمرین • ${stat?.currentStreak || 0} پاسخ درست پیاپی${averageTime !== null ? ` • میانگین ${averageTime} ثانیه` : ''}`
+                            : 'با بازی کردن این جدول را تمرین کن.'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button className="mt-4 w-full py-3 bg-cyan-600 text-white rounded-2xl font-bold" onClick={onCloseProgress}>
+                  بستن
+                </button>
+              </>
+            );
+          })()}
         </ModalShell>
       )}
 
