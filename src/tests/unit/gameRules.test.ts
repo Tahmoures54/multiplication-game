@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  calculateAnswerReward,
   calculateStars,
   currentTimeLimit,
   getVisualSeason,
   maxFactorForSeason,
+  isAnswerCorrect,
 } from '../../features/gameplay/engine/rules.ts';
 
 test('visual seasons repeat in a stable four-season cycle', () => {
@@ -35,4 +37,28 @@ test('stars use strict time thresholds and preserve life/combo requirements', ()
   assert.equal(calculateStars(8, 10, 4, 2), 3);
   assert.equal(calculateStars(8, 10, 4, 1), 2);
   assert.equal(calculateStars(10, 0, 4, 3), 1);
+});
+
+test('answer validation accepts only the exact numeric answer', () => {
+  assert.equal(isAnswerCorrect(42, 42), true);
+  assert.equal(isAnswerCorrect(41, 42), false);
+  assert.equal(isAnswerCorrect(-1, 42), false);
+});
+
+test('correct-answer rewards preserve score and coin progression', () => {
+  assert.deepEqual(calculateAnswerReward(10, 0), {
+    newCombo: 1,
+    gained: 18,
+    coinsGained: 1,
+  });
+  assert.deepEqual(calculateAnswerReward(10, 2), {
+    newCombo: 3,
+    gained: 24,
+    coinsGained: 2,
+  });
+  assert.deepEqual(calculateAnswerReward(10, 10), {
+    newCombo: 11,
+    gained: 40,
+    coinsGained: 4,
+  });
 });
