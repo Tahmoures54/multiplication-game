@@ -150,7 +150,7 @@ export function GameModals({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {availableTables.map(({ table, stat, attempts, correct, accuracy }) => {
+                  {availableTables.map(({ table, stat, attempts, accuracy }) => {
                     const mastery = accuracy === null
                       ? { label: 'شروع نشده', color: 'text-slate-400' }
                       : attempts >= 10 && accuracy >= 90
