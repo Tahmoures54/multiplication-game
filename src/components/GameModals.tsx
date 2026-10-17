@@ -5,6 +5,7 @@ import { openWhatsAppSupport } from './SupportFab';
 
 interface Props {
   saveData: SaveData;
+  maxAvailableTable: number;
   showAquarium: boolean;
   showAchievements: boolean;
   showProgress: boolean;
@@ -36,6 +37,7 @@ function ModalShell({
 
 export function GameModals({
   saveData,
+  maxAvailableTable,
   showAquarium,
   showAchievements,
   showProgress,
@@ -107,33 +109,48 @@ export function GameModals({
           {(() => {
             const tables = Array.from({ length: 12 }, (_, i) => i + 1).map(table => {
               const stat = saveData.tableStats[String(table)];
-              const attempts = stat?.attempts || 0;
+              const attempts = Math.max(0, stat?.attempts || 0);
+              const correct = Math.min(attempts, Math.max(0, stat?.correct || 0));
               return {
                 table,
                 stat,
                 attempts,
-                accuracy: attempts ? Math.round((stat!.correct / attempts) * 100) : null,
+                correct,
+                accuracy: attempts ? Math.round((correct / attempts) * 100) : null,
               };
             });
-            const practiced = tables.filter(item => item.attempts > 0);
-            const recommendation = practiced.length
-              ? [...practiced].sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0))[0]
-              : tables[0];
+            const availableTables = tables.slice(0, Math.max(1, Math.min(12, maxAvailableTable)));
+            const recommendationPriority = (item: typeof tables[number]) => {
+              const confidence = item.attempts / (item.attempts + 5);
+              const smoothedAccuracy = (item.correct + 2) / (item.attempts + 4);
+              return (1 - smoothedAccuracy) * confidence + (1 - confidence) * 0.2;
+            };
+            // Suggest an available but unpracticed table first. Otherwise blend
+            // accuracy with sample size so one early mistake cannot dominate.
+            const recommendation =
+              availableTables.find(item => item.attempts === 0) ??
+              [...availableTables].sort((a, b) => recommendationPriority(b) - recommendationPriority(a))[0];
+            const masteredCount = availableTables.filter(item =>
+              item.attempts >= 10 && (item.accuracy ?? 0) >= 90
+            ).length;
             return (
               <>
                 <h2 className="text-xl font-bold text-white mb-1 text-center">📊 پیشرفت یادگیری</h2>
-                <p className="text-cyan-300 text-xs text-center mb-4">هر جدول را که بیشتر تمرین کنی، قوی‌تر می‌شی.</p>
+                <p className="text-cyan-300 text-xs text-center mb-1">هر جدول را که بیشتر تمرین کنی، قوی‌تر می‌شی.</p>
+                <p className="text-slate-300 text-[11px] text-center mb-4">
+                  {masteredCount} از {availableTables.length} جدول به تسلط رسیده
+                </p>
                 <div className="bg-cyan-950/70 border border-cyan-400/30 rounded-2xl p-3 mb-4">
                   <div className="text-cyan-200 text-xs mb-1">🎯 پیشنهاد تمرین بعدی</div>
                   <div className="text-white font-bold">جدول ×{recommendation.table}</div>
                   <div className="text-cyan-100 text-xs mt-1">
                     {recommendation.attempts
-                      ? `دقت فعلی ${recommendation.accuracy}% است؛ چند دور دیگر تمرین کن.`
-                      : 'از این جدول شروع کن و با هر پاسخ درست، پیشرفتت را ببین.'}
+                      ? `دقت فعلی ${recommendation.accuracy}% در ${recommendation.attempts} تمرین است؛ چند دور دیگر تمرین کن.`
+                      : 'هنوز این جدول را تمرین نکردی؛ از اینجا شروع کن!'}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {tables.map(({ table, stat, attempts, accuracy }) => {
+                  {availableTables.map(({ table, stat, attempts, correct, accuracy }) => {
                     const mastery = accuracy === null
                       ? { label: 'شروع نشده', color: 'text-slate-400' }
                       : attempts >= 10 && accuracy >= 90
@@ -152,7 +169,14 @@ export function GameModals({
                             {accuracy === null ? mastery.label : `${accuracy}% • ${mastery.label}`}
                           </span>
                         </div>
-                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-2 bg-slate-700 rounded-full overflow-hidden"
+                          role="progressbar"
+                          aria-label={`پیشرفت جدول ضرب ${table}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={accuracy ?? 0}
+                        >
                           <div
                             className={`h-full ${accuracy !== null && accuracy >= 90 ? 'bg-gradient-to-r from-cyan-400 to-green-400' : 'bg-cyan-400'}`}
                             style={{ width: `${accuracy ?? 0}%` }}
