@@ -115,6 +115,7 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
 
       - name: ℹ️ Check Bazaar billing configuration
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         run: |
@@ -178,6 +179,7 @@ jobs:
           retention-days: 30
 
       - name: ℹ️ Build Info
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.BAZAAR_RSA_PUBLIC_KEY }}
         run: |
