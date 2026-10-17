@@ -133,13 +133,35 @@ export function GameModals({
             const masteredCount = availableTables.filter(item =>
               item.attempts >= 10 && (item.accuracy ?? 0) >= 90
             ).length;
+            const practicedCount = availableTables.filter(item => item.attempts > 0).length;
             return (
               <>
                 <h2 className="text-xl font-bold text-white mb-1 text-center">📊 پیشرفت یادگیری</h2>
                 <p className="text-cyan-300 text-xs text-center mb-1">هر جدول را که بیشتر تمرین کنی، قوی‌تر می‌شی.</p>
-                <p className="text-slate-300 text-[11px] text-center mb-4">
-                  {masteredCount} از {availableTables.length} جدول به تسلط رسیده
+                <p className="text-slate-300 text-[11px] text-center mb-3">
+                  {masteredCount} از {availableTables.length} جدول به معیار تسلط تمرینی رسیده
                 </p>
+                <div className="bg-slate-800/90 border border-white/10 rounded-2xl p-3 mb-4">
+                  <div className="text-white font-bold text-sm mb-2">👨‍👩‍👧 گزارش برای خانواده</div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="rounded-xl bg-slate-900/70 p-2">
+                      <div className="text-cyan-200 text-[11px]">شروع بازی</div>
+                      <div className="text-white font-black text-lg">{saveData.totalPlayed}</div>
+                    </div>
+                    <div className="rounded-xl bg-slate-900/70 p-2">
+                      <div className="text-emerald-200 text-[11px]">پاسخ درست</div>
+                      <div className="text-white font-black text-lg">{saveData.totalCorrect}</div>
+                    </div>
+                  </div>
+                  <p className="text-slate-300 text-[11px] leading-5 mt-2">
+                    {practicedCount === 0
+                      ? 'با چند دور بازی، این گزارش نشان می‌دهد کدام جدول‌ها تمرین شده‌اند.'
+                      : `تا اینجا ${practicedCount} جدول تمرین شده است. معیار تسلط در این گزارش، دست‌کم ۱۰ تلاش و حداقل ۹۰٪ پاسخ درست است.`}
+                  </p>
+                  <p className="text-slate-400 text-[10px] leading-4 mt-1">
+                    این گزارش بر اساس پاسخ‌های ثبت‌شده در بازی است و جای آزمون رسمی را نمی‌گیرد.
+                  </p>
+                </div>
                 <div className="bg-cyan-950/70 border border-cyan-400/30 rounded-2xl p-3 mb-4">
                   <div className="text-cyan-200 text-xs mb-1">🎯 پیشنهاد تمرین بعدی</div>
                   <div className="text-white font-bold">جدول ×{recommendation.table}</div>

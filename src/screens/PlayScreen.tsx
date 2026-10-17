@@ -61,7 +61,7 @@ export function PlayScreen(props: Props) {
           <div className="text-xs text-white/80 mt-1">یکی را انتخاب کن</div>
         </div>
 
-        <div className="text-center text-sm font-bold min-h-[20px] drop-shadow-lg" style={{ color: game.feedbackColor }}>
+        <div className="mx-auto max-w-xl px-1 text-center text-xs sm:text-sm leading-relaxed font-bold min-h-[20px] drop-shadow-lg" style={{ color: game.feedbackColor }}>
           {game.feedbackText}
         </div>
 
