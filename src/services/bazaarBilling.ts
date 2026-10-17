@@ -2,6 +2,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 
 interface BazaarBillingPlugin {
   getPurchaseStatus(): Promise<{ owned: boolean }>;
+  refreshPurchaseStatus(): Promise<{ owned: boolean }>;
   purchaseFullUnlock(): Promise<{ owned: boolean }>;
   restorePurchases(): Promise<{ owned: boolean }>;
 }
@@ -9,26 +10,127 @@ interface BazaarBillingPlugin {
 const BazaarBilling = registerPlugin<BazaarBillingPlugin>('BazaarBilling');
 
 export const FULL_UNLOCK_PRODUCT_ID = 'fishmath_full_unlock';
+const RECOVERY_ATTEMPTS = 3;
+const RECOVERY_DELAY_MS = 900;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function unavailableMessage(): string {
+  return 'پرداخت و بازیابی خرید فقط در نسخه اندروید نصب‌شده از کافه‌بازار فعال است.';
+}
+
+async function refreshWithRetries(): Promise<boolean> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < RECOVERY_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) await wait(RECOVERY_DELAY_MS);
+    try {
+      const result = await BazaarBilling.refreshPurchaseStatus();
+      return result.owned === true;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('تأیید وضعیت خرید از کافه‌بازار ممکن نشد. دوباره تلاش کنید.');
+}
 
 export const bazaarBilling = {
   isNative: () => Capacitor.isNativePlatform(),
+
+  /**
+   * On startup, prefer a fresh verified Bazaar inventory. If Bazaar is
+   * temporarily unavailable, keep a previously verified local unlock so the
+   * paid game remains usable offline.
+   */
   async status(): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) return false;
-    const result = await BazaarBilling.getPurchaseStatus();
-    return result.owned === true;
+
+    let cached = false;
+    try {
+      cached = (await BazaarBilling.getPurchaseStatus()).owned === true;
+    } catch {
+      // Continue to fresh inventory reconciliation below.
+    }
+
+    try {
+      return await refreshWithRetries();
+    } catch {
+      return cached;
+    }
   },
+
+  /**
+   * Check ownership before opening checkout to avoid charging twice if the
+   * previous activity result was lost. If verification cannot be refreshed,
+   * do not launch another payment attempt.
+   */
   async purchase(): Promise<boolean> {
-    if (!Capacitor.isNativePlatform()) {
-      throw new Error('خرید درون‌برنامه‌ای فقط در نسخه اندروید نصب‌شده از کافه‌بازار فعال است.');
+    if (!Capacitor.isNativePlatform()) throw new Error(unavailableMessage());
+
+    let alreadyOwned: boolean;
+    try {
+      alreadyOwned = await refreshWithRetries();
+    } catch {
+      throw new Error(
+        'وضعیت خرید قبلی از کافه‌بازار قابل بررسی نیست. برای جلوگیری از پرداخت تکراری، فعلاً خرید جدید شروع نشد؛ اتصال را بررسی و دوباره تلاش کنید.',
+      );
     }
-    const result = await BazaarBilling.purchaseFullUnlock();
-    return result.owned === true;
+    if (alreadyOwned) return true;
+
+    try {
+      const result = await BazaarBilling.purchaseFullUnlock();
+      if (result.owned === true) return true;
+    } catch (purchaseError) {
+      // The Bazaar checkout may have completed even if Android did not return
+      // the activity result. Reconcile inventory before showing a failure.
+      try {
+        if (await refreshWithRetries()) return true;
+      } catch {
+        // Preserve a clear recovery instruction below; never auto-charge again.
+      }
+      const detail = purchaseError instanceof Error ? purchaseError.message : '';
+      throw new Error(
+        detail
+          ? `${detail} اگر مبلغی کسر شده، دوباره پرداخت نکنید؛ «بازیابی خرید» را امتحان کنید.`
+          : 'نتیجه خرید هنوز تأیید نشده است. دوباره پرداخت نکنید؛ «بازیابی خرید» را امتحان کنید.',
+      );
+    }
+
+    // A false/empty callback can also mean the checkout result was lost.
+    try {
+      if (await refreshWithRetries()) return true;
+    } catch {
+      // Fall through to the same safe recovery guidance.
+    }
+    throw new Error(
+      'خرید هنوز در کافه‌بازار تأیید نشده است. اگر مبلغی کسر شده، دوباره پرداخت نکنید؛ «بازیابی خرید» را امتحان کنید.',
+    );
   },
+
+  /**
+   * Refresh inventory rather than trusting the startup snapshot. A verified
+   * local entitlement remains usable offline if Bazaar cannot be reached.
+   */
   async restore(): Promise<boolean> {
-    if (!Capacitor.isNativePlatform()) {
-      throw new Error('بازیابی خرید فقط در نسخه اندروید امکان‌پذیر است.');
+    if (!Capacitor.isNativePlatform()) throw new Error(unavailableMessage());
+
+    let cached = false;
+    try {
+      cached = (await BazaarBilling.getPurchaseStatus()).owned === true;
+    } catch {
+      // Try a live inventory refresh.
     }
-    const result = await BazaarBilling.restorePurchases();
-    return result.owned === true;
+
+    try {
+      return await refreshWithRetries();
+    } catch (error) {
+      if (cached) return true;
+      throw error instanceof Error
+        ? error
+        : new Error('بازیابی خرید انجام نشد. اتصال به کافه‌بازار را بررسی کنید و دوباره تلاش کنید.');
+    }
   },
 };
