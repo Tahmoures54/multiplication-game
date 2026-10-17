@@ -969,6 +969,7 @@ export default function App() {
 
       <GameModals
         saveData={saveData}
+        maxAvailableTable={maxFactorForSeason(game.season)}
         showAquarium={showAquarium}
         showAchievements={showAchievements}
         showProgress={showProgress}
