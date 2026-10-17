@@ -44,24 +44,28 @@ export function generateQuestion(
   forceType?: QuestionType,
   tableStats?: Record<string, TableStat>
 ): Question {
-  // Adaptive selection: favor tables with lower accuracy and less practice.
+  // Sample both factors adaptively so weak tables are practiced regardless
+  // of whether they appear on the left or right side of the multiplication.
   const candidates = Array.from({ length: maxFactor - minFactor + 1 }, (_, i) => minFactor + i);
-  const weighted = candidates.map(factor => {
-    const stat = tableStats?.[String(factor)];
-    if (!stat || stat.attempts === 0) return { factor, weight: 3 };
-    const accuracy = stat.correct / stat.attempts;
-    const weakness = 1 - accuracy;
-    const recencyNeed = stat.currentStreak < 3 ? 1 : 0.25;
-    return { factor, weight: 1 + weakness * 6 + recencyNeed };
-  });
-  const totalWeight = weighted.reduce((sum, x) => sum + x.weight, 0);
-  let cursor = Math.random() * totalWeight;
-  let a = candidates[0];
-  for (const item of weighted) {
-    cursor -= item.weight;
-    if (cursor <= 0) { a = item.factor; break; }
-  }
-  const b = randomInt(minFactor, maxFactor);
+  const chooseFactor = (): number => {
+    const weighted = candidates.map(factor => {
+      const stat = tableStats?.[String(factor)];
+      if (!stat || stat.attempts === 0) return { factor, weight: 3 };
+      const accuracy = stat.correct / stat.attempts;
+      const weakness = 1 - accuracy;
+      const recencyNeed = stat.currentStreak < 3 ? 1 : 0.25;
+      return { factor, weight: 1 + weakness * 6 + recencyNeed };
+    });
+    const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+    let cursor = Math.random() * totalWeight;
+    for (const item of weighted) {
+      cursor -= item.weight;
+      if (cursor <= 0) return item.factor;
+    }
+    return candidates[candidates.length - 1];
+  };
+  const a = chooseFactor();
+  const b = chooseFactor();
   const correct = a * b;
 
   // تعیین نوع سوال بر اساس فصل یا اجبار
