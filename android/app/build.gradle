@@ -10,8 +10,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         buildConfigField "String", "BAZAAR_RSA_PUBLIC_KEY", "\"${System.getenv('BAZAAR_RSA_PUBLIC_KEY') ?: ''}\""
         manifestPlaceholders = [marketApplicationId: "com.farsitel.bazaar", marketBindAddress: "ir.cafebazaar.pardakht.InAppBillingService.BIND", marketPermission: "com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR"]
-        versionCode 4
-        versionName "1.2.1"
+        versionCode 5
+        versionName "1.2.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
