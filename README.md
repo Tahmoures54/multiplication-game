@@ -81,7 +81,7 @@ npm run android:bundle
 
 - نام: ماهیگیری جدول ضرب
 - شناسه بسته: `com.arsha.fishmath`
-- نسخه فعلی: `1.2.1` (versionCode: `4`)
+- نسخه فعلی: `1.2.2` (versionCode: `5`)
 - حداقل اندروید: API 22
 - هدف ساخت: API 36
 
