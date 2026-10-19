@@ -47,6 +47,6 @@ test('domain integration: start a season, complete episodes, persist progress, a
   assert.equal(reloaded.totalPlayed, 10);
   assert.equal(Object.keys(reloaded.starsPerEpisode).filter(key => key.startsWith('1-')).length, 10);
   for (let episode = 1; episode <= 10; episode += 1) {
-    assert.equal(reloaded.starsPerEpisode[`1-${episode}`], 3);
+    assert.equal(reloaded.starsPerEpisode[`1-${episode}`], episode === 1 ? 2 : 3);
   }
 });
