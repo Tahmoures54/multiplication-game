@@ -27,3 +27,11 @@ jobs:
         run: npm ci
       - name: TypeScript typecheck and production build
         run: npm run verify
+      - name: Report release version sources (audit §3.4)
+        run: |
+          set -e
+          grep -n '"version": "1.2.2"' package.json
+          grep -n 'versionCode 5' android/app/build.gradle
+          grep -n '1.2.2.*versionCode:.*5' README.md
+          grep -n '1.2.2' RELEASE_QA.md
+          grep -n 'versionCode.*5' RELEASE_QA.md
