@@ -109,6 +109,22 @@ Keep every checkbox unchecked until a dated device record and supporting evidenc
 | Age/content rating form | Unverified | Owner action |
 | Real device / real Bazaar transaction | **Not tested in this audit** | Human/device execution required |
 
+
+## Backup/privacy risk assessment — decision required (no configuration changed)
+
+**Observed in source:** `android/app/src/main/AndroidManifest.xml` sets `android:allowBackup="true"`; no `android:dataExtractionRules` or `android:fullBackupContent` attribute is present in that manifest. `android/app/src/main/java/com/arsha/fishmath/BazaarBillingPlugin.java` stores the cached entitlement in SharedPreferences named `fishmath_bazaar_entitlement` under key `full_unlock_owned`. `src/utils/storage.ts` stores game progress using WebView `localStorage` key `fish_math_save`. No custom backup exclusion was confirmed in the inspected manifest.
+
+Android Auto Backup generally includes SharedPreferences, app-private files and databases by default, while cache/code-cache/no-backup directories are excluded. For apps targeting API 31+, Android 12+ uses `dataExtractionRules` for cloud backup/device transfer; if no rules are specified, backup modes remain enabled by default except excluded locations. See the [official Android Auto Backup documentation](https://developer.android.com/identity/data/autobackup).
+
+**Important limit of this source review:** the manifest and Java/TypeScript code alone do not prove the exact treatment of the WebView's `localStorage` backing files on every Android/OEM version. That needs an APK/device backup/restore test or an explicit rule based on verified WebView storage paths. Likewise, `allowBackup=true` alone is not evidence that data has actually been uploaded or exposed.
+
+### Options for owner decision
+
+- **Option A — retain backups:** keep `allowBackup=true`, verify actual backup/restore behavior on supported Android versions, and update `PRIVACY_POLICY.md` to accurately explain that Android system backup/device transfer may preserve some app data where enabled. Do not claim that progress is guaranteed to remain only on one device.
+- **Option B — restrict backups:** define the appropriate `dataExtractionRules` for Android 12+ and `fullBackupContent` for older supported versions, or disable backup as appropriate; explicitly decide whether game progress and the cached purchase entitlement should be excluded from cloud backup and device-to-device transfer. Then align the privacy policy with the tested behavior. `allowBackup=false` alone may not disable device-to-device transfer on some Android 12+ manufacturer implementations, so rules need to be chosen deliberately.
+
+**Status: NEEDS OWNER DECISION.** No manifest, backup rule, or privacy-policy change was made. Do not close this risk until the owner selects Option A or B and the chosen behavior is verified.
+
 ## Notes
 
 - GitHub Actions Artifacts are ZIP downloads containing the APK; extract the ZIP before installing.
