@@ -1,7 +1,7 @@
 // ===== سیستم ذخیره‌سازی محلی =====
 
 import type { SaveData, CaughtFish } from '../types';
-import { DEFAULT_ACHIEVEMENTS, DEFAULT_POWERUPS, TOTAL_SEASONS, EPISODES_PER_SEASON } from '../constants';
+import { DEFAULT_ACHIEVEMENTS, DEFAULT_POWERUPS, TOTAL_SEASONS, EPISODES_PER_SEASON } from '../constants.ts';
 
 const STORAGE_KEY = 'fish_math_save';
 const SAVE_VERSION = 2;
